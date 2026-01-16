@@ -1,7 +1,0 @@
-cluster_id,size,mean_len,dominant_organism,n_unique_organisms,max_pairwise_sim,mean_pairwise_sim
-C0001,10,584.00,Athene noctua indigena,6,0.9691,0.6533
-C0002,2,694.00,Troglodytes musculus,1,0.8498,0.8498
-C0003,1,637.00,Gallinula chloropus,1,0.0000,0.0000
-C0004,1,522.00,Columbina cyanopis,1,0.0000,0.0000
-C0005,1,584.00,Athene cunicularia hypugaea,1,0.0000,0.0000
-C0006,1,584.00,Athene brama indica,1,0.0000,0.0000
