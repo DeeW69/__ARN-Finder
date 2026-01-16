@@ -1,0 +1,1 @@
+"""Motif related stubs."""

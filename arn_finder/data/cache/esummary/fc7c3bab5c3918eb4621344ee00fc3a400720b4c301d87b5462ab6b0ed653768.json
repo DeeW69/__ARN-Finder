@@ -1,0 +1,650 @@
+{
+  "header": {
+    "type": "esummary",
+    "version": "0.3"
+  },
+  "result": {
+    "uids": [
+      "3138340346",
+      "3138340344",
+      "3138340342",
+      "3138340340",
+      "3138340338",
+      "3138340336",
+      "3138340334",
+      "3138340332",
+      "3138340330",
+      "3138340328",
+      "3138340326",
+      "3138340324",
+      "3138340322",
+      "3138340320",
+      "3138340318",
+      "3138340316",
+      "3138340314",
+      "3138340312",
+      "3138340310",
+      "3138340308"
+    ],
+    "3138340346": {
+      "uid": "3138340346",
+      "term": "3138340346",
+      "caption": "PX802414",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9144 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340346|gb|PX802414.1|",
+      "gi": 3138340346,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 694,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9144|Argentina: Buenos Aires|2017-11-07",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802414.1"
+      },
+      "accessionversion": "PX802414.1"
+    },
+    "3138340344": {
+      "uid": "3138340344",
+      "term": "3138340344",
+      "caption": "PX802413",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9142 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340344|gb|PX802413.1|",
+      "gi": 3138340344,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 694,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9142|Argentina: Buenos Aires|2017-11-07",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802413.1"
+      },
+      "accessionversion": "PX802413.1"
+    },
+    "3138340342": {
+      "uid": "3138340342",
+      "term": "3138340342",
+      "caption": "PX802412",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9103 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340342|gb|PX802412.1|",
+      "gi": 3138340342,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 667,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9103|Argentina: Entre Rios|2006",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802412.1"
+      },
+      "accessionversion": "PX802412.1"
+    },
+    "3138340340": {
+      "uid": "3138340340",
+      "term": "3138340340",
+      "caption": "PX802411",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9099 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340340|gb|PX802411.1|",
+      "gi": 3138340340,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 694,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9099|Argentina: Mendoza|2015-12-26",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802411.1"
+      },
+      "accessionversion": "PX802411.1"
+    },
+    "3138340338": {
+      "uid": "3138340338",
+      "term": "3138340338",
+      "caption": "PX802410",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9097 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340338|gb|PX802410.1|",
+      "gi": 3138340338,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 471,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9097|Argentina: Mendoza|2015-12-02",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802410.1"
+      },
+      "accessionversion": "PX802410.1"
+    },
+    "3138340336": {
+      "uid": "3138340336",
+      "term": "3138340336",
+      "caption": "PX802409",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9095 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340336|gb|PX802409.1|",
+      "gi": 3138340336,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 674,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9095|Argentina: Mendoza|2017-02-04",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802409.1"
+      },
+      "accessionversion": "PX802409.1"
+    },
+    "3138340334": {
+      "uid": "3138340334",
+      "term": "3138340334",
+      "caption": "PX802408",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9091 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340334|gb|PX802408.1|",
+      "gi": 3138340334,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 694,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9091|Argentina: Mendoza|2017-01-29",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802408.1"
+      },
+      "accessionversion": "PX802408.1"
+    },
+    "3138340332": {
+      "uid": "3138340332",
+      "term": "3138340332",
+      "caption": "PX802407",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9087 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340332|gb|PX802407.1|",
+      "gi": 3138340332,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 694,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9087|Argentina: Mendoza|2017-01-28",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802407.1"
+      },
+      "accessionversion": "PX802407.1"
+    },
+    "3138340330": {
+      "uid": "3138340330",
+      "term": "3138340330",
+      "caption": "PX802406",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9083 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340330|gb|PX802406.1|",
+      "gi": 3138340330,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 634,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9083|Argentina: Mendoza|2017-01-21",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802406.1"
+      },
+      "accessionversion": "PX802406.1"
+    },
+    "3138340328": {
+      "uid": "3138340328",
+      "term": "3138340328",
+      "caption": "PX802405",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9079 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340328|gb|PX802405.1|",
+      "gi": 3138340328,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 694,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9079|Argentina: Mendoza|2016-12-23",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802405.1"
+      },
+      "accessionversion": "PX802405.1"
+    },
+    "3138340326": {
+      "uid": "3138340326",
+      "term": "3138340326",
+      "caption": "PX802404",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9075 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340326|gb|PX802404.1|",
+      "gi": 3138340326,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 507,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9075|Argentina: Mendoza|2016-12-17",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802404.1"
+      },
+      "accessionversion": "PX802404.1"
+    },
+    "3138340324": {
+      "uid": "3138340324",
+      "term": "3138340324",
+      "caption": "PX802403",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9071 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340324|gb|PX802403.1|",
+      "gi": 3138340324,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 686,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9071|Argentina: Mendoza|2017-01-24",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802403.1"
+      },
+      "accessionversion": "PX802403.1"
+    },
+    "3138340322": {
+      "uid": "3138340322",
+      "term": "3138340322",
+      "caption": "PX802402",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9067 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340322|gb|PX802402.1|",
+      "gi": 3138340322,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 646,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9067|Argentina: Mendoza|2016-12-11",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802402.1"
+      },
+      "accessionversion": "PX802402.1"
+    },
+    "3138340320": {
+      "uid": "3138340320",
+      "term": "3138340320",
+      "caption": "PX802401",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9063 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340320|gb|PX802401.1|",
+      "gi": 3138340320,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 411,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9063|Argentina: Mendoza|2016-01-01",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802401.1"
+      },
+      "accessionversion": "PX802401.1"
+    },
+    "3138340318": {
+      "uid": "3138340318",
+      "term": "3138340318",
+      "caption": "PX802400",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9059 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340318|gb|PX802400.1|",
+      "gi": 3138340318,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 678,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9059|Argentina: Mendoza|2016-01-21",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802400.1"
+      },
+      "accessionversion": "PX802400.1"
+    },
+    "3138340316": {
+      "uid": "3138340316",
+      "term": "3138340316",
+      "caption": "PX802399",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9055 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340316|gb|PX802399.1|",
+      "gi": 3138340316,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 439,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9055|Argentina: Mendoza|2016-01-08",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802399.1"
+      },
+      "accessionversion": "PX802399.1"
+    },
+    "3138340314": {
+      "uid": "3138340314",
+      "term": "3138340314",
+      "caption": "PX802398",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-9051 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340314|gb|PX802398.1|",
+      "gi": 3138340314,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 468,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-9051|Argentina: Mendoza|2015-12-11",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802398.1"
+      },
+      "accessionversion": "PX802398.1"
+    },
+    "3138340312": {
+      "uid": "3138340312",
+      "term": "3138340312",
+      "caption": "PX802397",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-8947 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340312|gb|PX802397.1|",
+      "gi": 3138340312,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 591,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-8947|Uruguay|2002-03-26",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802397.1"
+      },
+      "accessionversion": "PX802397.1"
+    },
+    "3138340310": {
+      "uid": "3138340310",
+      "term": "3138340310",
+      "caption": "PX802396",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-8916 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340310|gb|PX802396.1|",
+      "gi": 3138340310,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 694,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-8916|Uruguay|2006-01-09",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802396.1"
+      },
+      "accessionversion": "PX802396.1"
+    },
+    "3138340308": {
+      "uid": "3138340308",
+      "term": "3138340308",
+      "caption": "PX802395",
+      "title": "Troglodytes musculus voucher MACN-Or-ct-8772 cytochrome c oxidase subunit I (COX1) gene, partial cds; mitochondrial",
+      "extra": "gi|3138340308|gb|PX802395.1|",
+      "gi": 3138340308,
+      "createdate": "2026/01/10",
+      "updatedate": "2026/01/10",
+      "taxid": 109448,
+      "slen": 694,
+      "biomol": "genomic",
+      "moltype": "dna",
+      "topology": "linear",
+      "sourcedb": "insd",
+      "genome": "mitochondrion",
+      "subtype": "specimen_voucher|country|collection_date",
+      "subname": "MACN-Or-ct-8772|Uruguay|2001-06-23",
+      "geneticcode": "1",
+      "organism": "Troglodytes musculus",
+      "statistics": "",
+      "properties": {
+        "na": "1",
+        "value": "1"
+      },
+      "oslt": {
+        "indexed": true,
+        "value": "PX802395.1"
+      },
+      "accessionversion": "PX802395.1"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arn-finder"
+version = "0.1.0"
+description = "Exploratory RNA/DNA toolkit (MVP stubs)"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "Sebastien VALETTE"}]
+dependencies = [
+    "requests>=2.31",
+]
+
+[project.scripts]
+arnfinder = "arn_finder.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]

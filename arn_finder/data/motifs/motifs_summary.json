@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-01-16T19:32:34.100634+00:00",
+  "input_fasta": "data\\filtered\\filtered_sequences.fasta",
+  "params": {
+    "k": 9,
+    "top": 200,
+    "min_count": 2,
+    "ignore_n": true,
+    "canonical": false,
+    "per_record": true,
+    "alphabet": "AUTO"
+  },
+  "total_records": 16,
+  "total_kmers_considered": 9427,
+  "unique_kmers": 3056,
+  "unique_kmers_after_filters": 200,
+  "notes": []
+}

@@ -1,0 +1,72 @@
+{
+  "header": {
+    "type": "esearch",
+    "version": "0.3"
+  },
+  "esearchresult": {
+    "count": "40394",
+    "retmax": "20",
+    "retstart": "0",
+    "querykey": "1",
+    "webenv": "MCID_696a8aa60bd93e3bed0451b4",
+    "idlist": [
+      "3138340346",
+      "3138340344",
+      "3138340342",
+      "3138340340",
+      "3138340338",
+      "3138340336",
+      "3138340334",
+      "3138340332",
+      "3138340330",
+      "3138340328",
+      "3138340326",
+      "3138340324",
+      "3138340322",
+      "3138340320",
+      "3138340318",
+      "3138340316",
+      "3138340314",
+      "3138340312",
+      "3138340310",
+      "3138340308"
+    ],
+    "translationset": [
+      {
+        "from": "Aves[Organism]",
+        "to": "\"Aves\"[Organism]"
+      }
+    ],
+    "translationstack": [
+      {
+        "term": "\"Aves\"[Organism]",
+        "field": "Organism",
+        "count": "1",
+        "explode": "Y"
+      },
+      {
+        "term": "COI[Gene]",
+        "field": "Gene",
+        "count": "1",
+        "explode": "N"
+      },
+      {
+        "term": "COX1[Title]",
+        "field": "Title",
+        "count": "1",
+        "explode": "N"
+      },
+      "OR",
+      "GROUP",
+      "AND",
+      {
+        "term": "mitochondrion[Filter]",
+        "field": "Filter",
+        "count": "1",
+        "explode": "N"
+      },
+      "AND"
+    ],
+    "querytranslation": "\"Aves\"[Organism] AND (COI[Gene] OR COX1[Title]) AND mitochondrion[Filter]"
+  }
+}

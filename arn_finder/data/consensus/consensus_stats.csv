@@ -1,0 +1,3 @@
+cluster_id,cluster_size,consensus_len,n_count,n_frac,gc_percent,method,k,min_overlap,min_identity,status,note
+C0001,10,584,5,0.0086,49.66,kmer,9,80,0.97,ok,
+C0002,2,694,7,0.0101,51.44,kmer,9,80,0.97,ok,

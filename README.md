@@ -1,0 +1,78 @@
+# ARN Finder 
+**Open-source Python pipeline turning public DNA/RNA sequences into exploratory, ML-ready artifacts.**
+
+## Project overview
+Public repositories like GenBank are rich yet messy. ARN Finder acts as a bridge between bioinformatics and data engineering: it downloads curated subsets via NCBI E-utilities, enforces quality filters, deduplicates, extracts motifs, clusters similar fragments, and produces exploratory consensus sequences. Guiding principles: transparency, reproducibility, responsible use of public data.
+
+## Key capabilities
+- Targeted GenBank/RefSeq queries through Entrez E-utilities.
+- Throttled downloads with local cache and manifest logging.
+- Quality filters (length, N%, GC%), dedupe, per-organism caps.
+- Global and per-record k-mer extraction.
+- Similarity clustering using k-mer Jaccard sets.
+- Experimental consensus generation per cluster.
+- End-to-end CLI that can be scripted or integrated in ML workflows.
+
+## Installation (Windows, Python 3.10+)
+`powershell
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -e .
+`
+
+## Pipeline overview
+`
+fetch ? filter ? motifs ? cluster ? consensus
+`
+Each step emits curated FASTA/CSV/JSON outputs plus a manifest capturing parameters and counts.
+
+## Quick demo & Fetch & filter
+`powershell
+arnfinder fetch --query "Aves[Organism] AND COI[Gene] AND mitochondrion[Filter]" --limit 200 --out-dir data/raw --cache-dir data/cache --email you@example.com
+arnfinder filter --in-fasta data/raw/sequences.fasta --in-metadata data/raw/metadata.jsonl --out-dir data/filtered --min-len 200 --max-n-frac 0.05 --alphabet AUTO --dedupe
+`
+Outputs: raw FASTA/JSONL/IDs, then filtered FASTA + filter_report + metadata subset.
+
+## Motif analysis (k-mers)
+Useful for feature engineering or motif discovery.
+`powershell
+arnfinder motifs --in-fasta data/filtered/filtered_sequences.fasta --out-dir data/motifs --k 9 --top 200 --min-count 2 --ignore-N --per-record
+`
+Produces: motifs.csv, motifs_by_record.csv, motifs_summary.json.
+
+## Similarity clustering
+Groups related fragments (e.g., mitochondrial COI in birds). k-mer sets ? Jaccard similarity ? union-find components. Includes cluster edges, per-cluster stats, manifest.
+
+## Consensus (experimental)
+Not a biological truth: a heuristic representative per cluster.
+- Overlap-based merging with identity checks (fallback to longest sequence).
+- Flagged low_quality if consensus > max_n_frac.
+- Outputs: consensus.fasta, consensus_stats.csv, consensus_manifest.json.
+
+## Scientific interpretation & limits
+- Partial, biased public data; no phylogenetic validation yet (BLAST planned for V2).
+- Intended for exploration, pedagogy, ML prototyping; revalidation is mandatory for any biological claim.
+
+## NCBI compliance
+- Query-on-demand, no mirroring.
+- Respect for rate limits; configurable sleep / API key.
+- Local caching to minimize repeated requests.
+- Explicit citation of NCBI as data source.
+
+## Roadmap (V2)
+- Optional BLAST alignment integration.
+- Stronger clustering (MinHash / graph embeddings).
+- Richer RNA-specific handling.
+- Advanced genomic descriptors (codon usage, signatures).
+- Enhanced ML-ready exports (Parquet, embeddings, metadata joins).
+
+## Target audiences
+- AI/bioinformatics internship proposals.
+- Academic research groups.
+- Medtech/biotech startups.
+- ML teams prototyping on public omics data.
+
+
+## License & citation
+- License: MIT.
+- Data source: NCBI GenBank / RefSeq (cite according to NCBI guidelines).

@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-01-16T19:27:31.074750+00:00",
+  "inputs": {
+    "fasta": "data\\raw\\sequences.fasta",
+    "metadata": "data\\raw\\metadata.jsonl"
+  },
+  "outputs": {
+    "sequences": "data\\filtered\\filtered_sequences.fasta",
+    "report": "data\\filtered\\filter_report.csv",
+    "metadata": "data\\filtered\\filtered_metadata.jsonl"
+  },
+  "params": {
+    "min_len": 200,
+    "max_n_frac": 0.05,
+    "alphabet": "AUTO",
+    "dedupe": true,
+    "write_report": true,
+    "max_per_organism": 2
+  },
+  "total_records": 100,
+  "kept_records": 16,
+  "dropped_records": 84,
+  "reason_counts": {
+    "ok": 16,
+    "max_per_organism": 69,
+    "duplicate": 15
+  },
+  "duplicates": 15,
+  "dropped_max_per_organism": 69
+}
