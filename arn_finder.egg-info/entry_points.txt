@@ -1,2 +1,0 @@
-[console_scripts]
-arnfinder = arn_finder.cli:main
