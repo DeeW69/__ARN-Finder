@@ -47,6 +47,9 @@ data/filtered/
 data/motifs/
 data/clusters/
 data/consensus/
+arn_finderV2/data/
+arn_finderV2/data/blast/
+arn_finderV2/data/cache/
 
 ####################################
 # Large biological files

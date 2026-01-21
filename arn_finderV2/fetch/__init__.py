@@ -1,0 +1,1 @@
+"""Fetch-related stubs."""

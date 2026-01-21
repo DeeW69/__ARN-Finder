@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arn-finder-v2"
+version = "0.1.0"
+description = "Next generation CLI utilities for ARN Finder experiments."
+readme = "README.md"
+authors = [{ name = "ARN Finder Team" }]
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.32.3",
+    "pandas>=2.2.0",
+    "pyarrow>=15.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+]
+
+[project.scripts]
+arnfinderv2 = "arn_finder_v2.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
