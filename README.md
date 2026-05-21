@@ -1,109 +1,445 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)
+![Version](https://img.shields.io/badge/version-3.1.0-brightgreen.svg)
 
-# ARN Finder 
-**Open-source Python pipeline turning public DNA/RNA sequences into exploratory, ML-ready artifacts.**
+# ARN Finder
+
+**Open-source Python pipeline turning public DNA/RNA sequences into exploratory, ML-ready artifacts — with RNA secondary structure prediction, a REST API, a local DuckDB database, and an HTML report.**
+
+---
+
+## Table of contents
+
+1. [Project overview](#project-overview)
+2. [Changelog](#changelog)
+3. [Architecture](#architecture)
+4. [Installation](#installation)
+5. [Quick start — one command](#quick-start--one-command)
+6. [CLI reference](#cli-reference)
+7. [REST API](#rest-api)
+8. [DuckDB local database](#duckdb-local-database)
+9. [Secondary structure prediction](#secondary-structure-prediction)
+10. [HTML report](#html-report)
+11. [Configuration](#configuration)
+12. [Pipeline outputs](#pipeline-outputs)
+13. [Scientific limits](#scientific-limits)
+14. [NCBI compliance](#ncbi-compliance)
+15. [Roadmap](#roadmap)
+16. [License](#license)
+
+---
 
 ## Project overview
-Public repositories like GenBank are rich yet messy. ARN Finder acts as a bridge between bioinformatics and data engineering: it downloads curated subsets via NCBI E-utilities, enforces quality filters, deduplicates, extracts motifs, clusters similar fragments, and produces exploratory consensus sequences. Guiding principles: transparency, reproducibility, responsible use of public data.
 
-## Key capabilities
-- Targeted GenBank/RefSeq queries through Entrez E-utilities.
-- Throttled downloads with local cache and manifest logging.
-- Quality filters (length, N%, GC%), dedupe, per-organism caps.
-- Global and per-record k-mer extraction.
-- Similarity clustering using k-mer Jaccard sets.
-- Experimental consensus generation per cluster.
-- End-to-end CLI that can be scripted or integrated in ML workflows.
+Public repositories like GenBank are rich yet messy. ARN Finder bridges bioinformatics and data engineering:
 
-## Installation (Windows, Python 3.10+)
-`powershell
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -e .
-`
+- Downloads curated sequence subsets via NCBI E-utilities (async, with retry)
+- Enforces quality filters (length, N%, GC%), deduplicates, enforces per-organism caps
+- Extracts k-mer motifs and clusters similar fragments via Jaccard similarity
+- Generates exploratory consensus sequences per cluster
+- **Predicts RNA secondary structure** (dot-bracket + MFE) via ViennaRNA, RNAfold, or a built-in Nussinov fallback
+- Exports everything as **Parquet ML-ready datasets** (validated with Pandera)
+- Indexes all outputs in a **local DuckDB database** for SQL queries
+- Generates a **dark-mode HTML report** at the end of every run
+- Exposes a **FastAPI REST interface** with async job management and Server-Sent Events
 
-## Pipeline overview
-`
-fetch ? filter ? motifs ? cluster ? consensus
-`
-Each step emits curated FASTA/CSV/JSON outputs plus a manifest capturing parameters and counts.
+Guiding principles: transparency, reproducibility, responsible use of public data.
 
-## Quick demo & Fetch & filter
-`powershell
-arnfinder fetch --query "Aves[Organism] AND COI[Gene] AND mitochondrion[Filter]" --limit 200 --out-dir data/raw --cache-dir data/cache --email you@example.com
-arnfinder filter --in-fasta data/raw/sequences.fasta --in-metadata data/raw/metadata.jsonl --out-dir data/filtered --min-len 200 --max-n-frac 0.05 --alphabet AUTO --dedupe
-`
-Outputs: raw FASTA/JSONL/IDs, then filtered FASTA + filter_report + metadata subset.
+---
 
-## Motif analysis (k-mers)
-Useful for feature engineering or motif discovery.
-`powershell
-arnfinder motifs --in-fasta data/filtered/filtered_sequences.fasta --out-dir data/motifs --k 9 --top 200 --min-count 2 --ignore-N --per-record
-`
-Produces: motifs.csv, motifs_by_record.csv, motifs_summary.json.
+## Changelog
 
-## Similarity clustering
-Groups related fragments (e.g., mitochondrial COI in birds). k-mer sets ? Jaccard similarity ? union-find components. Includes cluster edges, per-cluster stats, manifest.
+### V3.1 — 2026-05-21 (current)
+- **Secondary structure ARN** — dot-bracket + MFE via ViennaRNA bindings, RNAfold subprocess, or built-in Nussinov (always available, no extra install)
+- **FastAPI** — async REST API (`arnfinderv3 serve`), SSE stream, job cancel, `/health` endpoint
+- **DuckDB** — local SQL database (`arnfinderv3 db`), 6 tables, pre-built analytical queries
+- **HTML report** — dark-mode responsive report auto-generated at end of every run
+- Pipeline extended: `fetch → filter → motifs → cluster → consensus → structure → [blast] → export → report`
+- New CLI commands: `structure`, `db`, `report`, `serve`
+- 39 files, 12 test modules
 
-## Consensus (experimental)
-Not a biological truth: a heuristic representative per cluster.
-- Overlap-based merging with identity checks (fallback to longest sequence).
-- Flagged low_quality if consensus > max_n_frac.
-- Outputs: consensus.fasta, consensus_stats.csv, consensus_manifest.json.
+### V3.0 — 2026-05-20
+- **Async fetch** with `aiohttp` + `asyncio.gather` (3–5× faster on large datasets)
+- **Retry with exponential backoff** via `tenacity` on all NCBI calls
+- **Pydantic Settings** replace dataclasses — validation at startup, explicit errors
+- **Typer CLI** replaces argparse — shell autocompletion, colored help
+- **Pipeline orchestrator** (`arnfinderv3 run "..."`) — one command instead of six
+- **GC filter** (`--min-gc` / `--max-gc`) added to the filter stage
+- **Pandera schema validation** on Parquet exports
+- **Rich** progress bars and colored logging throughout
+- **Async BLAST polling** — non-blocking, tenacity retry
+- `src/` layout, Python 3.11+ required
+- 27 files, 8 test modules
 
-## Validation (V2.1) : BLAST optionnel
-Exploratory validation of consensus or filtered sequences against the NCBI BLAST service (Common URL API). Each query is throttled, polled until ready, and produces three artifacts:
-- `blast_hits.jsonl`: 1 JSON object per sequence with RID, cached raw file path, and the parsed top hits (accession, title, organism, pident, coverage, e-value, bitscore).
-- `blast_summary.csv`: compact table of the best hit per sequence for rapid inspection.
-- `blast_manifest.json`: parameters (program, db, format, rate-limit, poll cadence), timestamps, totals (ok/failed) and cache hints.
+### V2 — 2024
+- ML-ready Parquet export (pandas + pyarrow)
+- Extended test suite
+- French-language documentation and logging
 
-### Configuration
-Set the following environment variables (copy `.env.example` to `.env`, automatically loaded on CLI start):
+### V1 — 2024
+- Complete pipeline: fetch → filter → motifs → cluster → consensus → BLAST
+- Synchronous, argparse CLI, dataclasses config
+
+---
+
+## Architecture
+
 ```
-NCBI_EMAIL=you@example.com          # required by NCBI
-NCBI_TOOL=arnfinder                 # reported tool name, default: arnfinder
-NCBI_API_KEY=your_api_key_optional  # optional but unlocks higher rate limits
-BLAST_PROGRAM=blastn                # default program (env override)
-BLAST_DB=nt                         # default database (env override)
+arn_finderV3/
+├── pyproject.toml
+├── .env.example
+└── src/arn_finder_v3/
+    ├── cli.py                   # Typer — 10 commands
+    ├── config.py                # Pydantic Settings
+    ├── io/                      # FASTA/CSV/JSON helpers, RichHandler
+    ├── fetch/                   # aiohttp async + tenacity retry
+    ├── filters/                 # Quality filter (length, N%, GC%)
+    ├── motifs/                  # K-mer extraction (canonical form)
+    ├── clustering/              # Jaccard similarity + union-find
+    ├── consensus/               # Overlap-based cluster consensus
+    ├── secondary_structure/     # Dot-bracket + MFE (ViennaRNA / RNAfold / Nussinov)
+    ├── blast/                   # Async BLAST polling + parser
+    ├── export/                  # Parquet + Pandera schema validation
+    ├── db/                      # DuckDB — import, SQL queries, export
+    ├── report/                  # HTML report (Jinja2, dark mode)
+    ├── api/                     # FastAPI — jobs, SSE, cancel
+    └── pipeline/                # Orchestrator — full run in one call
 ```
 
-Respect NCBI guidelines: identify yourself with email/tool, keep at most ~1 request/second without API key, enable caching via `--cache-dir` to avoid resubmitting identical sequences, and treat BLAST as on-demand validation (no mirroring).
+**Pipeline flow:**
+```
+fetch → filter → motifs → cluster → consensus → structure → [blast] → export → report
+```
 
-### Usage examples
+Each stage emits curated FASTA/CSV/JSON outputs plus a manifest capturing exact parameters, counts, and timestamps.
+
+---
+
+## Installation
+
+### Requirements
+- Python 3.11+
+- (optional) ViennaRNA for accurate secondary structure: `conda install -c bioconda viennarna`
+
 ```powershell
-# Validating consensus sequences (falls back to filtered_sequences.fasta if consensus is missing)
-arnfinder blast --out-dir data/blast --cache-dir data/blast/cache --format JSON2
+# Clone
+git clone https://github.com/DeeW69/__ARN-Finder.git
+cd __ARN-Finder/arn_finderV3
 
-# Alternate database/format, smaller hit window, faster polling
-arnfinder blast --program blastn --db nt --max-hits 5 --poll-seconds 5 --format Tabular --out-dir data/blast_tabular
+# Virtual environment
+python -m venv .venv
+.\.venv\Scripts\activate        # Windows
+# source .venv/bin/activate    # Linux/macOS
+
+# Install
+pip install -e ".[dev]"
+
+# Configure
+copy .env.example .env
+# Edit .env : set NCBI_EMAIL at minimum
 ```
 
-BLAST outputs are exploratory sanity checks, not authoritative annotations. Always re-validate and interpret in context of the biological question.
+---
 
-## Scientific interpretation & limits
-- Partial, biased public data; optional BLAST validation is exploratory, not definitive phylogenetics.
-- Intended for exploration, pedagogy, ML prototyping; revalidation is mandatory for any biological claim.
+## Quick start — one command
+
+```powershell
+arnfinderv3 run "BRCA1[Gene Name] AND Homo sapiens[Organism]" `
+  --out data `
+  --limit 100 `
+  --min-gc 0.35 `
+  --max-gc 0.75
+
+# Output:
+#   data/raw/           sequences.fasta, metadata.jsonl
+#   data/filtered/      filtered_sequences.fasta, filter_report.csv
+#   data/motifs/        motifs.csv, motifs_by_record.csv
+#   data/clusters/      clusters.jsonl, cluster_stats.csv
+#   data/consensus/     consensus.fasta, consensus_stats.csv
+#   data/structure/     structures.csv, structures.jsonl   ← NEW V3.1
+#   data/export/        features.parquet, joined_dataset.parquet
+#   data/report.html                                        ← NEW V3.1
+```
+
+---
+
+## CLI reference
+
+```
+arnfinderv3 --help
+
+Commands:
+  run        Full pipeline (fetch → ... → report)
+  fetch      Download sequences from NCBI Entrez
+  filter     Quality filter (length, N%, GC%, dedupe)
+  motifs     K-mer extraction
+  cluster    Jaccard similarity clustering
+  consensus  Cluster consensus sequences
+  structure  RNA secondary structure prediction       ← V3.1
+  blast      NCBI BLAST (async polling)
+  export     Parquet ML-ready export (Pandera)
+  db         Import outputs into DuckDB, run SQL      ← V3.1
+  report     Generate HTML run report                 ← V3.1
+  serve      Start FastAPI REST server                ← V3.1
+```
+
+### Key options for `run`
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--limit` | 200 | Max sequences to fetch |
+| `--min-len` | 200 | Minimum sequence length |
+| `--max-n-frac` | 0.05 | Max fraction of N bases |
+| `--min-gc` | 0.0 | Min GC fraction (0–1) |
+| `--max-gc` | 1.0 | Max GC fraction (0–1) |
+| `--k` | 9 | K-mer size (motifs + clustering) |
+| `--min-sim` | 0.35 | Jaccard threshold for clustering |
+| `--no-structure` | — | Disable secondary structure |
+| `--blast` | — | Enable BLAST validation |
+| `--no-export` | — | Disable Parquet export |
+| `--no-report` | — | Disable HTML report |
+
+---
+
+## REST API
+
+```powershell
+arnfinderv3 serve           # http://127.0.0.1:8000/docs
+arnfinderv3 serve --port 9000 --reload   # dev mode
+```
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | API health + available backends |
+| `POST` | `/pipeline/run` | Launch full pipeline (async, returns `job_id`) |
+| `GET` | `/pipeline/{id}/status` | Job status + per-stage elapsed time |
+| `GET` | `/pipeline/{id}/stream` | **Server-Sent Events** real-time progress |
+| `GET` | `/pipeline/{id}/results` | Full results (completed jobs only) |
+| `DELETE` | `/pipeline/{id}` | Cancel a running job |
+| `GET` | `/pipeline` | List all jobs |
+| `POST` | `/structure/run` | Standalone structure prediction |
+
+#### Example — launch pipeline via API
+
+```python
+import httpx, json, time
+
+r = httpx.post("http://localhost:8000/pipeline/run", json={
+    "query": "COI[Gene] AND Aves[Organism]",
+    "limit": 50,
+    "run_blast": False,
+})
+job_id = r.json()["job_id"]
+
+# Poll status
+while True:
+    s = httpx.get(f"http://localhost:8000/pipeline/{job_id}/status").json()
+    print(s["status"], [st["stage"] for st in s["stages"] if st["status"] == "completed"])
+    if s["status"] in ("completed", "failed"):
+        break
+    time.sleep(5)
+```
+
+---
+
+## DuckDB local database
+
+```powershell
+# Import all pipeline outputs and run a SQL query
+arnfinderv3 db data/ -q "SELECT organism, COUNT(*) FROM sequences GROUP BY organism ORDER BY 2 DESC"
+
+# Export a table to Parquet
+arnfinderv3 db data/ --export-table structure --export-path data/export/structure.parquet
+```
+
+#### Available tables
+
+| Table | Content |
+|-------|---------|
+| `sequences` | All filtered sequences (quality metrics, organism) |
+| `motifs` | K-mers per sequence |
+| `clusters` | Cluster membership for each sequence |
+| `consensus` | Consensus stats per cluster |
+| `structure` | Dot-bracket + MFE per sequence |
+| `blast_hits` | BLAST hit summaries |
+
+#### Python usage
+
+```python
+from arn_finder_v3.db import ARNFinderDB
+from pathlib import Path
+
+with ARNFinderDB("data/arnfinder.duckdb") as db:
+    db.import_all(Path("data/"))
+
+    # Pre-built analytical queries
+    print(db.top_kmers(n=10))
+    print(db.cluster_stats())
+    print(db.sequence_overview())
+
+    # Free SQL
+    df = db.query("""
+        SELECT s.organism, AVG(st.mfe) AS mean_mfe, COUNT(*) AS n
+        FROM sequences s
+        JOIN structure st ON s.record_id = st.record_id
+        WHERE s.kept = TRUE AND st.skipped = FALSE
+        GROUP BY s.organism
+        ORDER BY mean_mfe
+    """)
+    print(df)
+```
+
+---
+
+## Secondary structure prediction
+
+ARN Finder automatically picks the best available backend:
+
+| Priority | Backend | Install | Accuracy |
+|----------|---------|---------|----------|
+| 1 | **ViennaRNA** Python bindings | `conda install -c bioconda viennarna` | High (thermodynamic) |
+| 2 | **RNAfold** subprocess | Included with ViennaRNA system package | High (thermodynamic) |
+| 3 | **Nussinov** (built-in) | None — always available | Approximate (maximizes base pairs) |
+
+```powershell
+# Predict on consensus sequences
+arnfinderv3 structure data/consensus/consensus.fasta -o data/structure
+
+# Force a specific backend
+arnfinderv3 structure data/consensus/consensus.fasta --backend nussinov_approx
+
+# Skip sequences longer than 1000 nt
+arnfinderv3 structure data/consensus/consensus.fasta --max-len 1000
+```
+
+Output columns: `record_id`, `length`, `gc_frac`, `dot_bracket`, `mfe_kcal_mol`, `backend`, `skipped`, `skip_reason`.
+
+> **Note:** DNA sequences are automatically converted to RNA (T→U) before prediction.
+> MFE from the Nussinov fallback is an approximation (−1 kcal/mol per pair) and should not be used for thermodynamic comparisons.
+
+---
+
+## HTML report
+
+An HTML report is automatically generated at the end of every `run`.
+
+```powershell
+# Generate standalone report from existing run data
+arnfinderv3 report data/ --query "COI[Gene] AND Aves[Organism]"
+# → data/report.html
+```
+
+The report includes:
+- Global KPIs (sequences fetched/kept, clusters, structures, backend)
+- Per-stage pipeline status and elapsed times
+- Filter rejection reasons (bar chart)
+- Top k-mers table
+- Top clusters with dominant organism and mean MFE
+- Secondary structure preview (dot-bracket + MFE per sequence)
+
+Dark-mode, responsive, no external dependencies — single self-contained HTML file.
+
+---
+
+## Configuration
+
+Copy `.env.example` to `.env` in the `arn_finderV3/` directory:
+
+```env
+# Required
+NCBI_EMAIL=you@example.com
+
+# Optional
+NCBI_TOOL=arnfinder_v3
+NCBI_API_KEY=your_api_key       # Unlocks 10 req/s instead of 3 req/s
+
+# BLAST (optional)
+BLAST_PROGRAM=blastn
+BLAST_DB=nt
+BLAST_MAX_HITS=10
+BLAST_TIMEOUT=600
+```
+
+All settings are validated by Pydantic at startup — a clear error is raised if `NCBI_EMAIL` is missing.
+
+---
+
+## Pipeline outputs
+
+| Stage | Key files | Format |
+|-------|-----------|--------|
+| **fetch** | `sequences.fasta`, `metadata.jsonl`, `ids.txt`, `manifest.json` | FASTA / JSONL / JSON |
+| **filter** | `filtered_sequences.fasta`, `filter_report.csv`, `filter_manifest.json` | FASTA / CSV / JSON |
+| **motifs** | `motifs.csv`, `motifs_by_record.csv`, `motifs_summary.json` | CSV / JSON |
+| **cluster** | `clusters.jsonl`, `cluster_edges.csv`, `cluster_stats.csv`, `cluster_manifest.json` | JSONL / CSV / JSON |
+| **consensus** | `consensus.fasta`, `consensus_stats.csv`, `consensus_manifest.json` | FASTA / CSV / JSON |
+| **structure** *(V3.1)* | `structures.csv`, `structures.jsonl`, `structure_manifest.json` | CSV / JSONL / JSON |
+| **blast** | `blast_hits.jsonl`, `blast_summary.csv`, `blast_manifest.json` | JSONL / CSV / JSON |
+| **export** | `features.parquet`, `joined_dataset.parquet`, `motifs_by_record.parquet` | Parquet |
+| **report** *(V3.1)* | `report.html` | HTML |
+
+---
+
+## Running tests
+
+```powershell
+cd arn_finderV3
+pytest tests/ -v --tb=short
+
+# With coverage
+pytest tests/ --cov=arn_finder_v3 --cov-report=term-missing
+```
+
+Test suite: 12 modules, covers filters, motifs, clustering, consensus, BLAST parser, export (Parquet + Pandera), secondary structure (all backends), FastAPI (TestClient), DuckDB, HTML report, and pipeline integration.
+
+---
+
+## Scientific limits
+
+- Data is partial and biased towards well-studied organisms in GenBank.
+- Clustering (Jaccard k-mer) is sequence-similarity based, not phylogenetic.
+- Consensus sequences are heuristic representatives, not biological ground truth.
+- MFE from the Nussinov fallback is an approximation — use ViennaRNA for thermodynamic accuracy.
+- BLAST validation is exploratory, not authoritative annotation.
+- Revalidation is mandatory before any biological claim.
+- Intended for exploration, pedagogy, and ML prototyping.
+
+---
 
 ## NCBI compliance
-- Query-on-demand, no mirroring.
-- Respect for rate limits; configurable sleep / API key.
-- Local caching to minimize repeated requests.
-- Explicit citation of NCBI as data source.
 
-## Roadmap (V2)
-- Enrich BLAST alignment summaries with more taxonomic context.
-- Stronger clustering (MinHash / graph embeddings).
-- Richer RNA-specific handling.
-- Advanced genomic descriptors (codon usage, signatures).
-- Enhanced ML-ready exports (Parquet, embeddings, metadata joins).
+- Query-on-demand only; no bulk mirroring.
+- Rate limits respected: 3 req/s without API key, 10 req/s with key.
+- Local caching minimizes repeated requests.
+- All requests identify the tool and a contact email.
+- Cite NCBI GenBank/RefSeq per their guidelines when publishing results.
+
+---
+
+## Roadmap
+
+- [ ] ViennaRNA Windows wheel bundled in optional dependency
+- [ ] Persistent job storage (SQLite/Redis) for the FastAPI layer
+- [ ] Richer BLAST summaries with full taxonomic lineage
+- [ ] MinHash / graph embeddings for large-scale clustering
+- [ ] Codon usage and advanced genomic descriptors
+- [ ] Sequence embeddings export (ESM-2, Nucleotide Transformer)
+
+---
 
 ## Target audiences
-- AI/bioinformatics internship proposals.
-- Academic research groups.
-- Medtech/biotech startups.
-- ML teams prototyping on public omics data.
 
+- AI/bioinformatics research and internship projects
+- Academic research groups working on public genomics data
+- Medtech/biotech startups prototyping on omics sequences
+- ML teams exploring public biological datasets
+
+---
 
 ## License & citation
-- License: MIT.
-- Data source: NCBI GenBank / RefSeq (cite according to NCBI guidelines).
+
+- **License:** MIT
+- **Data source:** NCBI GenBank / RefSeq — cite according to [NCBI guidelines](https://www.ncbi.nlm.nih.gov/home/about/policies/)
+- **Secondary structure:** If using ViennaRNA, cite: Lorenz et al. (2011) *ViennaRNA Package 2.0*, Algorithms for Molecular Biology, 6:26

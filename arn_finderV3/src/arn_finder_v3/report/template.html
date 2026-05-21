@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ARN Finder V3 — Rapport {{ run_id }}</title>
+  <style>
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --border: #2d3048;
+      --accent: #4f9cf9; --green: #4ade80; --red: #f87171;
+      --yellow: #fbbf24; --text: #e2e8f0; --muted: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.6; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+    header { border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+    header h1 { font-size: 1.8rem; color: var(--accent); font-weight: 700; }
+    header .meta { color: var(--muted); font-size: 0.85rem; margin-top: 0.4rem; }
+    h2 { font-size: 1.1rem; color: var(--accent); margin: 2rem 0 1rem; border-left: 3px solid var(--accent); padding-left: 0.7rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; }
+    .card .label { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .card .value { font-size: 1.8rem; font-weight: 700; color: var(--text); margin-top: 0.3rem; }
+    .card .sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    thead th { background: var(--surface); color: var(--muted); text-align: left; padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--border); font-weight: 600; }
+    tbody tr:hover { background: var(--surface); }
+    tbody td { padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border); }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.72rem; font-weight: 600; }
+    .badge-ok { background: rgba(74,222,128,.15); color: var(--green); }
+    .badge-warn { background: rgba(251,191,36,.15); color: var(--yellow); }
+    .badge-err { background: rgba(248,113,113,.15); color: var(--red); }
+    .bar-wrap { background: var(--border); border-radius: 4px; height: 6px; width: 100%; margin-top: 4px; }
+    .bar { height: 6px; border-radius: 4px; background: var(--accent); }
+    .mfe-neg { color: var(--green); } .mfe-pos { color: var(--red); }
+    .stage-row { display: flex; align-items: center; gap: 1rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+    .stage-name { width: 120px; font-weight: 600; }
+    .stage-time { color: var(--muted); font-size: 0.8rem; min-width: 60px; text-align: right; }
+    footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>ARN Finder V3 — Rapport de run</h1>
+    <div class="meta">
+      Requête : <strong>{{ query }}</strong> &nbsp;|&nbsp;
+      Généré le : {{ generated_at }} &nbsp;|&nbsp;
+      Run ID : {{ run_id }}
+    </div>
+  </header>
+
+  <!-- KPIs globaux -->
+  <h2>Vue d'ensemble</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="label">Séquences fetchées</div>
+      <div class="value">{{ stats.fetched }}</div>
+    </div>
+    <div class="card">
+      <div class="label">Après filtrage</div>
+      <div class="value">{{ stats.kept }}</div>
+      <div class="sub">{{ stats.filter_pct }}% conservées</div>
+    </div>
+    <div class="card">
+      <div class="label">Clusters</div>
+      <div class="value">{{ stats.clusters }}</div>
+      <div class="sub">sim ≥ {{ stats.min_sim }}</div>
+    </div>
+    <div class="card">
+      <div class="label">Consensus</div>
+      <div class="value">{{ stats.consensus }}</div>
+    </div>
+    <div class="card">
+      <div class="label">Structures calculées</div>
+      <div class="value">{{ stats.structures }}</div>
+      <div class="sub">backend : {{ stats.structure_backend }}</div>
+    </div>
+  </div>
+
+  <!-- Étapes du pipeline -->
+  <h2>Étapes du pipeline</h2>
+  {% for stage in pipeline_stages %}
+  <div class="stage-row">
+    <div class="stage-name">{{ stage.name }}</div>
+    <div>
+      {% if stage.status == "ok" %}
+        <span class="badge badge-ok">✓ OK</span>
+      {% elif stage.status == "skipped" %}
+        <span class="badge badge-warn">⊘ ignoré</span>
+      {% else %}
+        <span class="badge badge-err">✗ erreur</span>
+      {% endif %}
+    </div>
+    <div style="flex:1">
+      {% if stage.detail %}<span style="color:var(--muted);font-size:0.8rem">{{ stage.detail }}</span>{% endif %}
+    </div>
+    <div class="stage-time">{{ stage.elapsed }}</div>
+  </div>
+  {% endfor %}
+
+  <!-- Raisons de rejet (filtrage) -->
+  {% if filter_reasons %}
+  <h2>Filtrage — raisons de rejet</h2>
+  <table>
+    <thead><tr><th>Raison</th><th>Nombre</th><th>Part</th></tr></thead>
+    <tbody>
+    {% for r in filter_reasons %}
+    <tr>
+      <td>{{ r.reason }}</td>
+      <td>{{ r.count }}</td>
+      <td>
+        <div class="bar-wrap"><div class="bar" style="width:{{ r.pct }}%"></div></div>
+        <span style="font-size:0.75rem;color:var(--muted)">{{ r.pct }}%</span>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- Top k-mers -->
+  {% if top_kmers %}
+  <h2>Top {{ top_kmers|length }} k-mers</h2>
+  <table>
+    <thead><tr><th>K-mer</th><th>Occurrences</th><th>Fréquence</th><th>Présence</th></tr></thead>
+    <tbody>
+    {% for km in top_kmers %}
+    <tr>
+      <td><code>{{ km.kmer }}</code></td>
+      <td>{{ km.count }}</td>
+      <td>{{ km.freq }}</td>
+      <td>
+        <div class="bar-wrap"><div class="bar" style="width:{{ km.presence_pct }}%"></div></div>
+        <span style="font-size:0.75rem;color:var(--muted)">{{ km.n_records }} seq.</span>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- Clusters -->
+  {% if clusters %}
+  <h2>Top clusters</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Taille</th><th>Organisme dominant</th><th>Sim. moyenne</th><th>MFE moyen</th></tr></thead>
+    <tbody>
+    {% for c in clusters %}
+    <tr>
+      <td><code>{{ c.cluster_id }}</code></td>
+      <td>{{ c.size }}</td>
+      <td>{{ c.organism }}</td>
+      <td>{{ c.mean_sim }}</td>
+      <td>{% if c.mean_mfe %}<span class="{{ 'mfe-neg' if c.mean_mfe < 0 else 'mfe-pos' }}">{{ c.mean_mfe }} kcal/mol</span>{% else %}—{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- Structure secondaire -->
+  {% if structure_records %}
+  <h2>Structure secondaire — aperçu</h2>
+  <table>
+    <thead><tr><th>Record</th><th>Longueur</th><th>GC</th><th>MFE (kcal/mol)</th><th>Structure</th></tr></thead>
+    <tbody>
+    {% for s in structure_records %}
+    <tr>
+      <td><code>{{ s.record_id }}</code></td>
+      <td>{{ s.length }}</td>
+      <td>{{ s.gc_frac }}</td>
+      <td><span class="{{ 'mfe-neg' if s.mfe < 0 else 'mfe-pos' }}">{{ s.mfe }}</span></td>
+      <td><code style="font-size:0.65rem;word-break:break-all">{{ s.dot_bracket[:80] }}{% if s.dot_bracket|length > 80 %}…{% endif %}</code></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <footer>
+    Généré par <strong>ARN Finder V3</strong> — {{ generated_at }}
+  </footer>
+</div>
+</body>
+</html>

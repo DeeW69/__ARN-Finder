@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "arn-finder-v3"
+version = "3.0.0"
+description = "ARN Finder V3 — pipeline bioinformatique ML-ready avec orchestration complète"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+dependencies = [
+    # HTTP / API
+    "requests>=2.31",
+    "aiohttp>=3.9",          # fetch asynchrone (V3 new)
+    "tenacity>=8.2",         # retry avec backoff exponentiel (V3 new)
+
+    # Configuration & validation
+    "pydantic>=2.7",         # config typée + validation (V3 new, remplace dataclasses)
+    "pydantic-settings>=2.3",
+    "python-dotenv>=1.0",
+
+    # Data / ML
+    "pandas>=2.2",
+    "pyarrow>=15.0",
+    "pandera>=0.19",         # validation de schéma dataframe (V3 new)
+
+    # CLI / UX
+    "rich>=13.7",            # progress bars, tables, logs colorés (V3 new)
+    "typer>=0.12",           # CLI moderne (remplace argparse, V3 new)
+
+    # Structure secondaire ARN (V3.1)
+    # ViennaRNA : conda install -c bioconda viennarna
+    # RNAfold subprocess : inclus dans ViennaRNA system package
+    # Fallback Nussinov pur Python : toujours disponible
+
+    # API (V3.1)
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.29",
+
+    # DuckDB (V3.1)
+    "duckdb>=0.10",
+
+    # Rapport HTML (V3.1)
+    "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "respx>=0.21",           # mock aiohttp dans les tests
+    "httpx>=0.27",           # client de test FastAPI
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[project.scripts]
+arnfinderv3 = "arn_finder_v3.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
