@@ -1,0 +1,29 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# ARN Finder V3.4.0 — dépendances optionnelles : embeddings transformers
+#
+# Active les backends Nucleotide Transformer (InstaDeepAI) et ESM-2 (Facebook).
+# Sans ces packages, le backend kmer_tfidf (numpy pur) est utilisé automatiquement.
+#
+# Installation :
+#   pip install -r requirements.txt -r requirements-embeddings.txt
+# ──────────────────────────────────────────────────────────────────────────────
+
+-r requirements.txt
+
+# ── PyTorch ────────────────────────────────────────────────────────────────────
+torch==2.9.1
+torchvision==0.24.1
+
+# ── HuggingFace Transformers ───────────────────────────────────────────────────
+transformers==4.57.1
+tokenizers==0.22.1
+safetensors==0.6.2
+huggingface-hub==0.36.0
+sentencepiece>=0.2
+
+# Dépendances communes
+filelock==3.20.0
+fsspec==2025.10.0
+tqdm==4.67.1
+regex==2025.11.3
+packaging==25.0
