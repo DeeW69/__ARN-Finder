@@ -44,6 +44,7 @@ class BlastRequest:
     email: str = ""
     tool: str = "arnfinder_v3"
     api_key: Optional[str] = None
+    enrich_taxonomy: bool = True      # V3.2 — enrichissement taxonomique des hits
 
 
 @dataclass
@@ -194,16 +195,48 @@ async def _async_blast(request: BlastRequest) -> BlastResult:
                 json.dumps({"record_id": record_id, "hits": hits}, indent=2), encoding="utf-8"
             )
 
+    # V3.2 — Enrichissement taxonomique des hits BLAST
+    if request.enrich_taxonomy and all_hits:
+        try:
+            from .taxonomy import enrich_hits_with_taxonomy
+            all_hits = await enrich_hits_with_taxonomy(
+                all_hits, request.email, request.tool, request.api_key
+            )
+            logger.info("Enrichissement taxonomique terminé pour %d hits", len(all_hits))
+        except Exception as e:
+            logger.warning("Enrichissement taxonomique échoué (hits non enrichis) : %s", e)
+            # Ajoute des champs vides pour garder le schéma cohérent
+            for h in all_hits:
+                h.setdefault("taxid", "")
+                for col in ("kingdom", "phylum", "class", "order", "family", "genus"):
+                    h.setdefault(col, "")
+    else:
+        for h in all_hits:
+            h.setdefault("taxid", "")
+            for col in ("kingdom", "phylum", "class", "order", "family", "genus"):
+                h.setdefault(col, "")
+
     with hits_path.open("w", encoding="utf-8") as f:
         for hit in all_hits:
             f.write(json.dumps(hit) + "\n")
 
     summary_rows = [
-        [h["query_id"], h["accession"], h["organism"],
-         f"{h['pident']:.3f}", f"{h['evalue']}", f"{h['bitscore']:.1f}", f"{h['coverage']:.3f}"]
+        [
+            h["query_id"], h["accession"], h["organism"],
+            h.get("taxid", ""),
+            f"{h['pident']:.3f}", f"{h['evalue']}", f"{h['bitscore']:.1f}", f"{h['coverage']:.3f}",
+            h.get("kingdom", ""), h.get("phylum", ""), h.get("class", ""),
+            h.get("order", ""), h.get("family", ""), h.get("genus", ""),
+        ]
         for h in all_hits
     ]
-    write_csv(summary_path, ["query_id", "accession", "organism", "pident", "evalue", "bitscore", "coverage"], summary_rows)
+    write_csv(
+        summary_path,
+        ["query_id", "accession", "organism", "taxid",
+         "pident", "evalue", "bitscore", "coverage",
+         "kingdom", "phylum", "class", "order", "family", "genus"],
+        summary_rows,
+    )
 
     elapsed = time.perf_counter() - t0
     manifest = {

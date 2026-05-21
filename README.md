@@ -1,6 +1,6 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)
-![Version](https://img.shields.io/badge/version-3.1.0-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-3.2.0-brightgreen.svg)
 
 # ARN Finder
 
@@ -49,7 +49,15 @@ Guiding principles: transparency, reproducibility, responsible use of public dat
 
 ## Changelog
 
-### V3.1 — 2026-05-21 (current)
+### V3.2 — 2026-05-21 (current)
+- **Codon usage** — fréquences de codons, RSCU (Sharp & Li 1986), GC1/GC2/GC3, ENc (Wright 1990) par séquence. Nouveau module `codon_usage/`, commande `arnfinderv3 codons`, tables DuckDB `codon_usage` + `codon_rscu`, section rapport HTML
+- **Persistent job storage** — le registre de jobs FastAPI est maintenant backed par SQLite (`~/.arnfinder/jobs.db`). Les jobs survivent aux redémarrages de l'API
+- **BLAST taxonomy enrichment** — les hits BLAST sont enrichis avec la lignée taxonomique complète (kingdom, phylum, class, order, family, genus) via NCBI efetch. Le CSV blast_summary inclut ces colonnes
+- Pipeline étendu : `fetch → filter → motifs → cluster → consensus → structure → codon_usage → [blast] → export → report`
+- Nouveau CLI : `arnfinderv3 codons`
+- 46 fichiers, 14 modules de tests
+
+### V3.1 — 2026-05-21
 - **Secondary structure ARN** — dot-bracket + MFE via ViennaRNA bindings, RNAfold subprocess, or built-in Nussinov (always available, no extra install)
 - **FastAPI** — async REST API (`arnfinderv3 serve`), SSE stream, job cancel, `/health` endpoint
 - **DuckDB** — local SQL database (`arnfinderv3 db`), 6 tables, pre-built analytical queries
@@ -98,7 +106,8 @@ arn_finderV3/
     ├── clustering/              # Jaccard similarity + union-find
     ├── consensus/               # Overlap-based cluster consensus
     ├── secondary_structure/     # Dot-bracket + MFE (ViennaRNA / RNAfold / Nussinov)
-    ├── blast/                   # Async BLAST polling + parser
+    ├── codon_usage/             # RSCU, GC1/2/3, ENc (V3.2)
+    ├── blast/                   # Async BLAST polling + parser + taxonomy enrichment
     ├── export/                  # Parquet + Pandera schema validation
     ├── db/                      # DuckDB — import, SQL queries, export
     ├── report/                  # HTML report (Jinja2, dark mode)
@@ -108,7 +117,7 @@ arn_finderV3/
 
 **Pipeline flow:**
 ```
-fetch → filter → motifs → cluster → consensus → structure → [blast] → export → report
+fetch → filter → motifs → cluster → consensus → structure → codon_usage → [blast] → export → report
 ```
 
 Each stage emits curated FASTA/CSV/JSON outputs plus a manifest capturing exact parameters, counts, and timestamps.
@@ -176,7 +185,8 @@ Commands:
   cluster    Jaccard similarity clustering
   consensus  Cluster consensus sequences
   structure  RNA secondary structure prediction       ← V3.1
-  blast      NCBI BLAST (async polling)
+  codons     Codon usage : RSCU, GC1/2/3, ENc        ← V3.2
+  blast      NCBI BLAST (async polling + taxonomy)   ← taxonomy V3.2
   export     Parquet ML-ready export (Pandera)
   db         Import outputs into DuckDB, run SQL      ← V3.1
   report     Generate HTML run report                 ← V3.1
@@ -420,11 +430,11 @@ Test suite: 12 modules, covers filters, motifs, clustering, consensus, BLAST par
 
 ## Roadmap
 
+- [x] Persistent job storage (SQLite) for the FastAPI layer ← V3.2
+- [x] Richer BLAST summaries with full taxonomic lineage ← V3.2
+- [x] Codon usage and advanced genomic descriptors (RSCU, ENc) ← V3.2
 - [ ] ViennaRNA Windows wheel bundled in optional dependency
-- [ ] Persistent job storage (SQLite/Redis) for the FastAPI layer
-- [ ] Richer BLAST summaries with full taxonomic lineage
 - [ ] MinHash / graph embeddings for large-scale clustering
-- [ ] Codon usage and advanced genomic descriptors
 - [ ] Sequence embeddings export (ESM-2, Nucleotide Transformer)
 
 ---

@@ -23,9 +23,9 @@ def client():
 @pytest.fixture(autouse=True)
 def reset_registry():
     """Remet le registre à zéro entre les tests."""
-    registry._jobs.clear()
+    registry._clear()
     yield
-    registry._jobs.clear()
+    registry._clear()
 
 
 def test_health(client: TestClient) -> None:

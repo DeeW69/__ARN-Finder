@@ -101,10 +101,44 @@ CREATE TABLE IF NOT EXISTS blast_hits (
     query_id    VARCHAR,
     accession   VARCHAR,
     organism    VARCHAR,
+    taxid       VARCHAR,
     pident      DOUBLE,
     evalue      DOUBLE,
     bitscore    DOUBLE,
     coverage    DOUBLE,
+    kingdom     VARCHAR,
+    phylum      VARCHAR,
+    class       VARCHAR,
+    "order"     VARCHAR,
+    family      VARCHAR,
+    genus       VARCHAR,
+    imported_at VARCHAR
+);
+"""
+
+DDL_CODON_USAGE = """
+CREATE TABLE IF NOT EXISTS codon_usage (
+    record_id     VARCHAR,
+    length        INTEGER,
+    gc_frac       DOUBLE,
+    gc1           DOUBLE,
+    gc2           DOUBLE,
+    gc3           DOUBLE,
+    enc           DOUBLE,
+    total_codons  INTEGER,
+    stop_codons   INTEGER,
+    imported_at   VARCHAR
+);
+"""
+
+DDL_CODON_RSCU = """
+CREATE TABLE IF NOT EXISTS codon_rscu (
+    record_id   VARCHAR,
+    codon       VARCHAR,
+    amino_acid  VARCHAR,
+    count       INTEGER,
+    freq        DOUBLE,
+    rscu        DOUBLE,
     imported_at VARCHAR
 );
 """
@@ -112,6 +146,7 @@ CREATE TABLE IF NOT EXISTS blast_hits (
 ALL_DDL = [
     DDL_SEQUENCES, DDL_MOTIFS, DDL_CLUSTERS,
     DDL_CONSENSUS, DDL_STRUCTURE, DDL_BLAST,
+    DDL_CODON_USAGE, DDL_CODON_RSCU,
 ]
 
 
@@ -151,12 +186,14 @@ class ARNFinderDB:
         counts: dict[str, int] = {}
         ts = now_iso()
 
-        counts["sequences"] = self._import_sequences(data_dir, ts)
-        counts["motifs"]    = self._import_motifs(data_dir, ts)
-        counts["clusters"]  = self._import_clusters(data_dir, ts)
-        counts["consensus"] = self._import_consensus(data_dir, ts)
-        counts["structure"] = self._import_structure(data_dir, ts)
-        counts["blast_hits"]= self._import_blast(data_dir, ts)
+        counts["sequences"]   = self._import_sequences(data_dir, ts)
+        counts["motifs"]      = self._import_motifs(data_dir, ts)
+        counts["clusters"]    = self._import_clusters(data_dir, ts)
+        counts["consensus"]   = self._import_consensus(data_dir, ts)
+        counts["structure"]   = self._import_structure(data_dir, ts)
+        counts["blast_hits"]  = self._import_blast(data_dir, ts)
+        counts["codon_usage"] = self._import_codon_usage(data_dir, ts)
+        counts["codon_rscu"]  = self._import_codon_rscu(data_dir, ts)
 
         logger.info("Import DuckDB terminé : %s", counts)
         return counts
@@ -265,21 +302,85 @@ class ARNFinderDB:
         return self._con.execute("SELECT COUNT(*) FROM structure").fetchone()[0]
 
     def _import_blast(self, data_dir: Path, ts: str) -> int:
-        csv = data_dir / "blast" / "blast_summary.csv"
-        if not csv.exists():
+        csv_path = data_dir / "blast" / "blast_summary.csv"
+        if not csv_path.exists():
             return 0
         self._con.execute("DELETE FROM blast_hits")
-        self._con.execute(f"""
-            INSERT INTO blast_hits
-            SELECT query_id, accession, organism,
-                   CAST(pident AS DOUBLE),
-                   CAST(evalue AS DOUBLE),
-                   CAST(bitscore AS DOUBLE),
-                   CAST(coverage AS DOUBLE),
-                   '{ts}'
-            FROM read_csv_auto('{csv}')
-        """)
+        # Charge toutes les colonnes présentes — taxonomy colonnes optionnelles
+        tmp = self._con.execute(
+            f"SELECT * FROM read_csv_auto('{csv_path}') LIMIT 0"
+        ).description
+        cols = [d[0] for d in tmp] if tmp else []
+        has_taxonomy = "kingdom" in cols
+
+        if has_taxonomy:
+            self._con.execute(f"""
+                INSERT INTO blast_hits
+                SELECT query_id, accession, organism,
+                       COALESCE(taxid, ''),
+                       CAST(pident AS DOUBLE),
+                       CAST(evalue AS DOUBLE),
+                       CAST(bitscore AS DOUBLE),
+                       CAST(coverage AS DOUBLE),
+                       COALESCE(kingdom,''), COALESCE(phylum,''),
+                       COALESCE("class",''), COALESCE("order",''),
+                       COALESCE(family,''), COALESCE(genus,''),
+                       '{ts}'
+                FROM read_csv_auto('{csv_path}')
+            """)
+        else:
+            self._con.execute(f"""
+                INSERT INTO blast_hits
+                SELECT query_id, accession, organism,
+                       '' AS taxid,
+                       CAST(pident AS DOUBLE),
+                       CAST(evalue AS DOUBLE),
+                       CAST(bitscore AS DOUBLE),
+                       CAST(coverage AS DOUBLE),
+                       '','','','','','',
+                       '{ts}'
+                FROM read_csv_auto('{csv_path}')
+            """)
         return self._con.execute("SELECT COUNT(*) FROM blast_hits").fetchone()[0]
+
+    def _import_codon_usage(self, data_dir: Path, ts: str) -> int:
+        csv_path = data_dir / "codon_usage" / "codon_stats.csv"
+        if not csv_path.exists():
+            return 0
+        self._con.execute("DELETE FROM codon_usage")
+        self._con.execute(f"""
+            INSERT INTO codon_usage
+            SELECT
+                record_id,
+                CAST(length AS INTEGER),
+                CAST(gc_frac AS DOUBLE),
+                CAST(gc1 AS DOUBLE),
+                CAST(gc2 AS DOUBLE),
+                CAST(gc3 AS DOUBLE),
+                CAST(enc AS DOUBLE),
+                CAST(total_codons AS INTEGER),
+                CAST(stop_codons AS INTEGER),
+                '{ts}'
+            FROM read_csv_auto('{csv_path}')
+        """)
+        return self._con.execute("SELECT COUNT(*) FROM codon_usage").fetchone()[0]
+
+    def _import_codon_rscu(self, data_dir: Path, ts: str) -> int:
+        csv_path = data_dir / "codon_usage" / "codon_rscu.csv"
+        if not csv_path.exists():
+            return 0
+        self._con.execute("DELETE FROM codon_rscu")
+        self._con.execute(f"""
+            INSERT INTO codon_rscu
+            SELECT
+                record_id, codon, amino_acid,
+                CAST(count AS INTEGER),
+                CAST(freq AS DOUBLE),
+                CAST(rscu AS DOUBLE),
+                '{ts}'
+            FROM read_csv_auto('{csv_path}')
+        """)
+        return self._con.execute("SELECT COUNT(*) FROM codon_rscu").fetchone()[0]
 
     # ── Requêtes ──────────────────────────────────────────────────────────────
 
@@ -361,6 +462,35 @@ class ARNFinderDB:
             LEFT JOIN clusters  c  ON s.record_id = c.record_id
             WHERE s.kept = TRUE
             ORDER BY s.length DESC
+        """)
+
+    def codon_bias_overview(self) -> Any:
+        """Vue du biais codon : ENc moyen, GC3 moyen, par organisme si disponible."""
+        return self.query("""
+            SELECT
+                s.organism,
+                AVG(cu.enc)  AS mean_enc,
+                AVG(cu.gc3)  AS mean_gc3,
+                AVG(cu.gc1)  AS mean_gc1,
+                COUNT(*)     AS n_sequences
+            FROM codon_usage cu
+            LEFT JOIN sequences s ON cu.record_id = s.record_id
+            GROUP BY s.organism
+            ORDER BY mean_enc ASC
+        """)
+
+    def top_preferred_codons(self, n: int = 20) -> Any:
+        """Top N codons avec RSCU moyen le plus élevé (codons préférés)."""
+        return self.query(f"""
+            SELECT codon, amino_acid,
+                   AVG(rscu) AS mean_rscu,
+                   SUM(count) AS total_count,
+                   COUNT(DISTINCT record_id) AS n_sequences
+            FROM codon_rscu
+            WHERE amino_acid NOT IN ('Stop', '?')
+            GROUP BY codon, amino_acid
+            ORDER BY mean_rscu DESC
+            LIMIT {n}
         """)
 
     def close(self) -> None:

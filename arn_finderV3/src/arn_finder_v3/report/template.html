@@ -33,6 +33,7 @@
     .bar-wrap { background: var(--border); border-radius: 4px; height: 6px; width: 100%; margin-top: 4px; }
     .bar { height: 6px; border-radius: 4px; background: var(--accent); }
     .mfe-neg { color: var(--green); } .mfe-pos { color: var(--red); }
+    .enc-high { color: var(--green); } .enc-mid { color: var(--yellow); } .enc-low { color: var(--red); }
     .stage-row { display: flex; align-items: center; gap: 1rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
     .stage-name { width: 120px; font-weight: 600; }
     .stage-time { color: var(--muted); font-size: 0.8rem; min-width: 60px; text-align: right; }
@@ -75,6 +76,11 @@
       <div class="label">Structures calculées</div>
       <div class="value">{{ stats.structures }}</div>
       <div class="sub">backend : {{ stats.structure_backend }}</div>
+    </div>
+    <div class="card">
+      <div class="label">Codon usage</div>
+      <div class="value">{{ stats.codon_seqs }}</div>
+      <div class="sub">ENc moyen : {{ stats.mean_enc }}</div>
     </div>
   </div>
 
@@ -176,6 +182,44 @@
     {% endfor %}
     </tbody>
   </table>
+  {% endif %}
+
+  <!-- Codon Usage -->
+  {% if codon_records %}
+  <h2>Codon Usage — ENc & GC par position</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Record</th><th>Longueur</th><th>Codons</th>
+        <th>GC1</th><th>GC2</th><th>GC3</th>
+        <th>ENc</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for c in codon_records %}
+    <tr>
+      <td><code>{{ c.record_id }}</code></td>
+      <td>{{ c.length }}</td>
+      <td>{{ c.total_codons }}</td>
+      <td>{{ c.gc1 }}</td>
+      <td>{{ c.gc2 }}</td>
+      <td>{{ c.gc3 }}</td>
+      <td>
+        <span class="enc-{{ c.enc_class }}">{{ c.enc }}</span>
+        <div class="bar-wrap">
+          <div class="bar" style="width:{{ ((c.enc - 20) / 41 * 100)|round }}%"></div>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p style="color:var(--muted);font-size:0.75rem;margin-top:0.5rem">
+    ENc : 20 = biais maximal (un seul codon par AA) — 61 = usage non biaisé (Wright 1990).
+    <span class="enc-high">Vert ≥ 50</span> |
+    <span class="enc-mid">Jaune 35–50</span> |
+    <span class="enc-low">Rouge &lt; 35</span>
+  </p>
   {% endif %}
 
   <footer>

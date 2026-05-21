@@ -54,6 +54,7 @@ def cmd_run(
     min_sim: Annotated[float, typer.Option(help="Seuil Jaccard clustering")] = 0.35,
     blast: Annotated[bool, typer.Option("--blast/--no-blast", help="Active BLAST")] = False,
     no_structure: Annotated[bool, typer.Option("--no-structure", help="Désactive structure secondaire")] = False,
+    no_codon_usage: Annotated[bool, typer.Option("--no-codon-usage", help="Désactive le calcul codon usage")] = False,
     no_export: Annotated[bool, typer.Option("--no-export", help="Désactive l'export Parquet")] = False,
     no_report: Annotated[bool, typer.Option("--no-report", help="Désactive le rapport HTML")] = False,
     stop_on_error: Annotated[bool, typer.Option("--stop-on-error/--continue-on-error")] = True,
@@ -75,6 +76,7 @@ def cmd_run(
         cluster_min_sim=min_sim,
         run_blast=blast,
         run_structure=not no_structure,
+        run_codon_usage=not no_codon_usage,
         run_export=not no_export,
         run_report=not no_report,
         stop_on_error=stop_on_error,
@@ -352,6 +354,31 @@ def cmd_report(
         top_clusters=top_clusters,
     )
     console.print(f"[green]✓[/green] Rapport généré → [bold]{report_path}[/bold]")
+
+
+# ── codon_usage ───────────────────────────────────────────────────────────────
+
+@app.command("codons")
+def cmd_codons(
+    fasta: Annotated[Path, typer.Argument(help="FASTA en entrée (DNA ou RNA)")],
+    out: Annotated[Path, typer.Option("-o")] = Path("data/codon_usage"),
+    reading_frame: Annotated[int, typer.Option(help="Cadre de lecture : 0, 1 ou 2")] = 0,
+    min_codons: Annotated[int, typer.Option(help="Nombre min de codons pour traiter la séquence")] = 10,
+) -> None:
+    """Calcule les fréquences de codons, RSCU, GC1/2/3 et ENc par séquence."""
+    from .codon_usage import CodonUsageRequest, compute_codon_usage
+
+    req = CodonUsageRequest(
+        input_fasta=fasta, out_dir=out,
+        reading_frame=reading_frame, min_codons=min_codons,
+    )
+    res = compute_codon_usage(req)
+    console.print(
+        f"[green]✓[/green] {res.computed}/{res.total_records} séquences calculées "
+        f"({res.skipped} ignorées) en {res.elapsed:.1f}s"
+    )
+    console.print(f"  Stats : {res.stats_csv}")
+    console.print(f"  RSCU  : {res.rscu_csv}")
 
 
 # ── api serve ─────────────────────────────────────────────────────────────────

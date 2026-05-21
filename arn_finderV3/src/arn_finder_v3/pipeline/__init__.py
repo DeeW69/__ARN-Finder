@@ -77,6 +77,11 @@ class PipelineConfig:
     # Rapport HTML (V3.1)
     run_report: bool = True
 
+    # Codon usage (V3.2)
+    run_codon_usage: bool = True
+    codon_reading_frame: int = 0
+    codon_min_codons: int = 10
+
     # Comportement
     stop_on_error: bool = True
 
@@ -95,6 +100,7 @@ def run_pipeline(cfg: PipelineConfig) -> PipelineResult:
     from ..consensus import ConsensusRequest, build_consensus
     from ..blast import BlastRequest, run_blast
     from ..secondary_structure import StructureRequest, compute_secondary_structure
+    from ..codon_usage import CodonUsageRequest, compute_codon_usage
     from ..report import generate_report
     from ..export import export_ml_ready
 
@@ -123,15 +129,16 @@ def run_pipeline(cfg: PipelineConfig) -> PipelineResult:
     structure_csv: Optional[Path] = None
 
     stages = [
-        ("fetch",     cfg.run_fetch),
-        ("filter",    cfg.run_filter),
-        ("motifs",    cfg.run_motifs),
-        ("cluster",   cfg.run_cluster),
-        ("consensus", cfg.run_consensus),
-        ("structure", cfg.run_structure),
-        ("blast",     cfg.run_blast),
-        ("export",    cfg.run_export),
-        ("report",    cfg.run_report),
+        ("fetch",        cfg.run_fetch),
+        ("filter",       cfg.run_filter),
+        ("motifs",       cfg.run_motifs),
+        ("cluster",      cfg.run_cluster),
+        ("consensus",    cfg.run_consensus),
+        ("structure",    cfg.run_structure),
+        ("codon_usage",  cfg.run_codon_usage),
+        ("blast",        cfg.run_blast),
+        ("export",       cfg.run_export),
+        ("report",       cfg.run_report),
     ]
 
     for stage_name, enabled in stages:
@@ -229,6 +236,19 @@ def run_pipeline(cfg: PipelineConfig) -> PipelineResult:
                 res = compute_secondary_structure(req)
                 structure_csv = res.structures_csv
                 result.stage_results["structure"] = res
+
+            elif stage_name == "codon_usage":
+                target = filtered_fasta
+                if not target or not target.exists():
+                    raise FileNotFoundError(f"Pas de FASTA filtré pour codon usage : {target}")
+                req = CodonUsageRequest(
+                    input_fasta=target,
+                    out_dir=base / "codon_usage",
+                    reading_frame=cfg.codon_reading_frame,
+                    min_codons=cfg.codon_min_codons,
+                )
+                res = compute_codon_usage(req)
+                result.stage_results["codon_usage"] = res
 
             elif stage_name == "blast":
                 target = consensus_fasta or filtered_fasta

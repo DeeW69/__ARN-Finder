@@ -32,6 +32,7 @@ def generate_report(
     top_kmers: int = 20,
     top_clusters: int = 15,
     top_structures: int = 20,
+    top_codon_seqs: int = 15,
 ) -> Path:
     """
     Lit les sorties du pipeline dans `data_dir` et génère un rapport HTML complet.
@@ -62,7 +63,7 @@ def generate_report(
     # ── Collecte des données ──────────────────────────────────────────────────
     ctx = _build_context(
         data_dir, query, run_id, generated_at,
-        top_kmers, top_clusters, top_structures,
+        top_kmers, top_clusters, top_structures, top_codon_seqs,
     )
 
     # ── Rendu Jinja2 ─────────────────────────────────────────────────────────
@@ -83,7 +84,7 @@ def generate_report(
 
 def _build_context(
     data_dir: Path, query: str, run_id: str, generated_at: str,
-    n_kmers: int, n_clusters: int, n_structures: int,
+    n_kmers: int, n_clusters: int, n_structures: int, n_codon_seqs: int,
 ) -> dict[str, Any]:
     stats = _collect_stats(data_dir)
     pipeline_stages = _collect_pipeline_stages(data_dir)
@@ -91,6 +92,7 @@ def _build_context(
     top_kmer_rows = _collect_top_kmers(data_dir, n_kmers)
     cluster_rows = _collect_clusters(data_dir, n_clusters)
     structure_rows = _collect_structures(data_dir, n_structures)
+    codon_rows = _collect_codon_stats(data_dir, n_codon_seqs)
 
     return {
         "query": query,
@@ -102,7 +104,38 @@ def _build_context(
         "top_kmers": top_kmer_rows,
         "clusters": cluster_rows,
         "structure_records": structure_rows,
+        "codon_records": codon_rows,
     }
+
+
+def _collect_codon_stats(data_dir: Path, n: int) -> list[dict]:
+    csv_path = data_dir / "codon_usage" / "codon_stats.csv"
+    if not csv_path.exists():
+        return []
+    rows = []
+    with csv_path.open(encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for i, row in enumerate(reader):
+            if i >= n:
+                break
+            try:
+                enc = float(row.get("enc", 0))
+                gc3 = float(row.get("gc3", 0))
+                gc1 = float(row.get("gc1", 0))
+                gc2 = float(row.get("gc2", 0))
+            except ValueError:
+                continue
+            rows.append({
+                "record_id": row["record_id"],
+                "length": row.get("length", ""),
+                "enc": round(enc, 2),
+                "gc1": f"{gc1:.3f}",
+                "gc2": f"{gc2:.3f}",
+                "gc3": f"{gc3:.3f}",
+                "total_codons": row.get("total_codons", ""),
+                "enc_class": "high" if enc >= 50 else ("mid" if enc >= 35 else "low"),
+            })
+    return rows
 
 
 def _collect_stats(data_dir: Path) -> dict[str, Any]:
@@ -110,6 +143,7 @@ def _collect_stats(data_dir: Path) -> dict[str, Any]:
         "fetched": 0, "kept": 0, "filter_pct": 0,
         "clusters": 0, "consensus": 0,
         "structures": 0, "structure_backend": "—",
+        "codon_seqs": 0, "mean_enc": "—",
         "min_sim": "—",
     }
 
@@ -147,6 +181,26 @@ def _collect_stats(data_dir: Path) -> dict[str, Any]:
         stats["structures"] = m.get("computed", 0)
         stats["structure_backend"] = m.get("backend", "—")
 
+    # Codon usage manifest
+    codon_manifest = data_dir / "codon_usage" / "codon_manifest.json"
+    if codon_manifest.exists():
+        m = json.loads(codon_manifest.read_text())
+        stats["codon_seqs"] = m.get("computed", 0)
+
+    # ENc moyen depuis codon_stats.csv
+    codon_stats_csv = data_dir / "codon_usage" / "codon_stats.csv"
+    if codon_stats_csv.exists():
+        enc_vals = []
+        with codon_stats_csv.open(encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    enc_vals.append(float(row.get("enc", 0)))
+                except ValueError:
+                    pass
+        if enc_vals:
+            stats["mean_enc"] = round(sum(enc_vals) / len(enc_vals), 1)
+
     return stats
 
 
@@ -157,9 +211,10 @@ def _collect_pipeline_stages(data_dir: Path) -> list[dict]:
         ("motifs",    data_dir / "motifs" / "motifs_summary.json"),
         ("cluster",   data_dir / "clusters" / "cluster_manifest.json"),
         ("consensus", data_dir / "consensus" / "consensus_manifest.json"),
-        ("structure", data_dir / "structure" / "structure_manifest.json"),
-        ("blast",     data_dir / "blast" / "blast_manifest.json"),
-        ("export",    data_dir / "export" / "export_manifest.json"),
+        ("structure",   data_dir / "structure" / "structure_manifest.json"),
+        ("codon_usage", data_dir / "codon_usage" / "codon_manifest.json"),
+        ("blast",       data_dir / "blast" / "blast_manifest.json"),
+        ("export",      data_dir / "export" / "export_manifest.json"),
     ]
     stages = []
     for name, path in stage_manifests:

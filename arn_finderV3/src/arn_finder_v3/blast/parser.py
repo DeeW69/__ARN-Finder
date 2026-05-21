@@ -59,10 +59,12 @@ def parse_blast_json(raw_json: str, max_hits: int, query_len: int) -> List[Dict[
             length = hit.get("len") or align_len
             pident = (identity / align_len * 100.0) if align_len else 0.0
             coverage = (align_len / query_len) if query_len and align_len else 0.0
+            taxid = desc.get("taxid")
             hits_out.append({
                 "accession": desc.get("accession") or desc.get("id") or "",
                 "title": title,
                 "organism": _extract_organism(desc, title),
+                "taxid": str(taxid) if taxid is not None else "",
                 "pident": round(pident, 3),
                 "length": _as_int(length),
                 "evalue": _extract_number(hsp, ["evalue", "e-value", "expect"]),
