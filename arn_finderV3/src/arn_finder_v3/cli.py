@@ -52,6 +52,7 @@ def cmd_run(
     dedupe: Annotated[bool, typer.Option("--dedupe/--no-dedupe", help="Déduplication")] = False,
     k: Annotated[int, typer.Option(help="Taille des k-mers")] = 9,
     min_sim: Annotated[float, typer.Option(help="Seuil Jaccard clustering")] = 0.35,
+    cluster_method: Annotated[str, typer.Option(help="Méthode clustering : jaccard | minhash")] = "jaccard",
     blast: Annotated[bool, typer.Option("--blast/--no-blast", help="Active BLAST")] = False,
     no_structure: Annotated[bool, typer.Option("--no-structure", help="Désactive structure secondaire")] = False,
     no_codon_usage: Annotated[bool, typer.Option("--no-codon-usage", help="Désactive le calcul codon usage")] = False,
@@ -74,6 +75,7 @@ def cmd_run(
         motif_k=k,
         cluster_k=k,
         cluster_min_sim=min_sim,
+        cluster_method=cluster_method,
         run_blast=blast,
         run_structure=not no_structure,
         run_codon_usage=not no_codon_usage,
@@ -170,14 +172,18 @@ def cmd_cluster(
     k: Annotated[int, typer.Option()] = 9,
     min_sim: Annotated[float, typer.Option(help="Seuil Jaccard")] = 0.35,
     max_pairs: Annotated[int, typer.Option()] = 200_000,
+    method: Annotated[str, typer.Option(help="jaccard (exact) | minhash (approx LSH, grands datasets)")] = "jaccard",
+    minhash_hashes: Annotated[int, typer.Option(help="Taille signature MinHash")] = 128,
+    minhash_bands: Annotated[int, typer.Option(help="Nombre de bandes LSH")] = 16,
     metadata: Annotated[Optional[Path], typer.Option()] = None,
 ) -> None:
-    """Regroupe les séquences similaires par similarité Jaccard k-mer."""
+    """Regroupe les séquences similaires — Jaccard exact ou MinHash LSH (grands datasets)."""
     from .clustering import ClusterRequest, cluster_sequences
 
     req = ClusterRequest(
         input_fasta=fasta, out_dir=out, k=k,
         min_similarity=min_sim, max_pairs=max_pairs, metadata_path=metadata,
+        method=method, minhash_hashes=minhash_hashes, minhash_bands=minhash_bands,
     )
     res = cluster_sequences(req)
     console.print(

@@ -64,6 +64,9 @@ class PipelineConfig:
     # Paramètres cluster
     cluster_k: int = 9
     cluster_min_sim: float = 0.35
+    cluster_method: str = "jaccard"   # "jaccard" | "minhash" (V3.3)
+    cluster_minhash_hashes: int = 128
+    cluster_minhash_bands: int = 16
 
     # Paramètres consensus
     consensus_min_cluster_size: int = 2
@@ -203,6 +206,9 @@ def run_pipeline(cfg: PipelineConfig) -> PipelineResult:
                     k=cfg.cluster_k,
                     min_similarity=cfg.cluster_min_sim,
                     metadata_path=filtered_metadata,
+                    method=cfg.cluster_method,
+                    minhash_hashes=cfg.cluster_minhash_hashes,
+                    minhash_bands=cfg.cluster_minhash_bands,
                 )
                 res = cluster_sequences(req)
                 clusters_path = res.clusters_path

@@ -1,4 +1,4 @@
-"""Clustering V3 — Jaccard k-mer + progress Rich."""
+"""Clustering V3 — Jaccard k-mer exact + MinHash LSH approximatif (V3.3)."""
 
 from __future__ import annotations
 
@@ -28,6 +28,11 @@ class ClusterRequest:
     alphabet: str = "AUTO"
     max_pairs: int = 200_000
     metadata_path: Optional[Path] = None
+    # V3.3 — MinHash LSH pour grands datasets
+    method: str = "jaccard"        # "jaccard" (exact O(n²)) | "minhash" (approx LSH)
+    minhash_hashes: int = 128      # taille de la signature MinHash
+    minhash_bands: int = 16        # nombre de bandes LSH
+    minhash_verify: bool = True    # vérification Jaccard exact sur les candidats LSH
 
 
 @dataclass(slots=True)
@@ -76,10 +81,37 @@ def cluster_sequences(request: ClusterRequest) -> ClusterResult:
         return ClusterResult(edges_path, clusters_path, stats_path, manifest_path, total_records, 0, 0, total_records)
 
     metadata_lookup = _load_metadata(request.metadata_path)
-    inverted_index = _build_inverted_index(kmer_sets)
-    edges, pairs_evaluated, max_hit = _compute_edges(kmer_sets, request.min_similarity, inverted_index, request.max_pairs)
-    if max_hit:
-        logger.warning("Limite de paires atteinte (%s) — clustering peut être incomplet.", request.max_pairs)
+
+    # ── Sélection de la méthode ────────────────────────────────────────────────
+    method = request.method.lower()
+    if method == "minhash":
+        edges_named, pairs_evaluated, candidates_found = _compute_edges_minhash(
+            records, kmer_sets, request
+        )
+        max_hit = False
+        # Convertit les edges nommés (id_a, id_b, sim) en edges indexés (i, j, sim)
+        id_to_idx = {r.record_id: i for i, r in enumerate(records)}
+        edges = [
+            (id_to_idx[a], id_to_idx[b], sim)
+            for a, b, sim in edges_named
+            if a in id_to_idx and b in id_to_idx
+        ]
+        logger.info(
+            "MinHash : %s séquences → %s candidats LSH, %s edges retenus",
+            total_records, candidates_found, len(edges),
+        )
+    else:
+        # Méthode Jaccard exacte (par défaut, V3 original)
+        inverted_index = _build_inverted_index(kmer_sets)
+        edges, pairs_evaluated, max_hit = _compute_edges(
+            kmer_sets, request.min_similarity, inverted_index, request.max_pairs
+        )
+        if max_hit:
+            logger.warning(
+                "Limite de paires atteinte (%s) — clustering peut être incomplet. "
+                "Utilisez --cluster-method minhash pour les grands datasets.",
+                request.max_pairs,
+            )
 
     uf = UnionFind(total_records)
     for i, j, _ in edges:
@@ -98,10 +130,13 @@ def cluster_sequences(request: ClusterRequest) -> ClusterResult:
     write_json(manifest_path, manifest)
 
     logger.info(
-        "Clustering : %s records, k=%s, min_sim=%.2f → %s paires évaluées, %s edges, %s clusters",
-        total_records, request.k, request.min_similarity, pairs_evaluated, len(edges), len(clusters),
+        "Clustering [%s] : %s records, k=%s, min_sim=%.2f → %s paires évaluées, %s edges, %s clusters",
+        method, total_records, request.k, request.min_similarity, pairs_evaluated, len(edges), len(clusters),
     )
-    return ClusterResult(edges_path, clusters_path, stats_path, manifest_path, total_records, pairs_evaluated, len(edges), len(clusters))
+    return ClusterResult(
+        edges_path, clusters_path, stats_path, manifest_path,
+        total_records, pairs_evaluated, len(edges), len(clusters),
+    )
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -174,6 +209,36 @@ def _compute_edges(
 
     edges.sort(key=lambda x: x[2], reverse=True)
     return edges, pairs_evaluated, max_hit
+
+
+def _compute_edges_minhash(
+    records: list[ClusterMember],
+    kmer_sets: list[set[str]],
+    request: ClusterRequest,
+) -> tuple[list[tuple[str, str, float]], int, int]:
+    """
+    Calcule les edges par MinHash + LSH.
+
+    Retourne : (edges nommés, pairs_evaluated, candidates_found)
+    """
+    from .minhash import MinHashConfig, cluster_by_minhash
+
+    config = MinHashConfig(
+        n_hashes=request.minhash_hashes,
+        n_bands=request.minhash_bands,
+        verify=request.minhash_verify,
+    )
+
+    with Progress(
+        TextColumn("[cyan]minhash[/cyan]"),
+        BarColumn(), TaskProgressColumn(), TimeElapsedColumn(), transient=True
+    ) as progress:
+        task = progress.add_task("signatures + LSH...", total=None)
+        record_ids = [r.record_id for r in records]
+        result = cluster_by_minhash(kmer_sets, record_ids, request.min_similarity, config)
+        progress.update(task, description=f"minhash : {len(result.edges)} edges")
+
+    return result.edges, result.pairs_evaluated, result.candidates_found
 
 
 def _jaccard(a: set[str], b: set[str]) -> float:
@@ -272,6 +337,9 @@ def _build_manifest(
             "k": request.k, "min_similarity": request.min_similarity,
             "ignore_n": request.ignore_n, "canonical": request.canonical,
             "alphabet": request.alphabet, "max_pairs": request.max_pairs,
+            "method": request.method,
+            "minhash_hashes": request.minhash_hashes if request.method == "minhash" else None,
+            "minhash_bands": request.minhash_bands if request.method == "minhash" else None,
         },
         "inputs": {"fasta": str(request.input_fasta), "metadata": str(request.metadata_path) if request.metadata_path else None},
         "total_records": total_records,

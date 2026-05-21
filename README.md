@@ -1,6 +1,6 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)
-![Version](https://img.shields.io/badge/version-3.2.0-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-3.3.0-brightgreen.svg)
 
 # ARN Finder
 
@@ -49,7 +49,12 @@ Guiding principles: transparency, reproducibility, responsible use of public dat
 
 ## Changelog
 
-### V3.2 — 2026-05-21 (current)
+### V3.3 — 2026-05-21 (current)
+- **MinHash + LSH clustering** — algorithme de clustering approximatif pour les grands datasets (>10k séquences). Remplace le Jaccard O(n²) par des signatures MinHash (double-hashing) + banding LSH O(n). Option `--cluster-method minhash` dans `arnfinderv3 cluster` et `arnfinderv3 run`. Vérification Jaccard exact sur les candidats LSH activée par défaut. 100% stdlib Python, zéro dépendance externe. 15 tests dédiés.
+- Pipeline : `cluster_method`, `cluster_minhash_hashes`, `cluster_minhash_bands` ajoutés à `PipelineConfig`
+- 48 fichiers, 15 modules de tests
+
+### V3.2 — 2026-05-21
 - **Codon usage** — fréquences de codons, RSCU (Sharp & Li 1986), GC1/GC2/GC3, ENc (Wright 1990) par séquence. Nouveau module `codon_usage/`, commande `arnfinderv3 codons`, tables DuckDB `codon_usage` + `codon_rscu`, section rapport HTML
 - **Persistent job storage** — le registre de jobs FastAPI est maintenant backed par SQLite (`~/.arnfinder/jobs.db`). Les jobs survivent aux redémarrages de l'API
 - **BLAST taxonomy enrichment** — les hits BLAST sont enrichis avec la lignée taxonomique complète (kingdom, phylum, class, order, family, genus) via NCBI efetch. Le CSV blast_summary inclut ces colonnes
@@ -434,7 +439,7 @@ Test suite: 12 modules, covers filters, motifs, clustering, consensus, BLAST par
 - [x] Richer BLAST summaries with full taxonomic lineage ← V3.2
 - [x] Codon usage and advanced genomic descriptors (RSCU, ENc) ← V3.2
 - [ ] ViennaRNA Windows wheel bundled in optional dependency
-- [ ] MinHash / graph embeddings for large-scale clustering
+- [x] MinHash / LSH for large-scale clustering ← V3.3
 - [ ] Sequence embeddings export (ESM-2, Nucleotide Transformer)
 
 ---
