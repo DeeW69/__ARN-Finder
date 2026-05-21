@@ -43,6 +43,9 @@ dependencies = [
 
     # Rapport HTML (V3.1)
     "jinja2>=3.1",
+
+    # Structure secondaire ARN — fallback Zuker pur Python (V3.4)
+    "seqfold>=0.7",
 ]
 
 [project.optional-dependencies]

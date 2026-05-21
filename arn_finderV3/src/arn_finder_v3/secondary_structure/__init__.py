@@ -1,10 +1,11 @@
 """
-Structure secondaire ARN — V3.1
+Structure secondaire ARN — V3.1 (mis à jour V3.4)
 
 Stratégie de backend (ordre de priorité) :
-  1. ViennaRNA Python bindings  (`import RNA`)      → conda install -c bioconda viennarna
+  1. ViennaRNA Python bindings  (`import RNA`)       → pip install ViennaRNA
   2. RNAfold subprocess          (`RNAfold --version`) → inclus dans ViennaRNA system package
-  3. Approximation Python pure   (nussinov simplifié)  → toujours disponible, moins précis
+  3. seqfold                     (`import seqfold`)   → pip install seqfold (Zuker pur Python)
+  4. Approximation Nussinov      (Python pur)         → toujours disponible, moins précis
 
 Le backend utilisé est tracé dans le manifest de sortie.
 Les séquences DNA sont converties en RNA (T→U) avant prédiction.
@@ -27,7 +28,7 @@ from ..io import ensure_dir, now_iso, read_fasta_records, write_csv, write_json,
 
 logger = get_logger("arnfinderv3.secondary_structure")
 
-Backend = Literal["viennarna", "rnafold_subprocess", "nussinov_approx"]
+Backend = Literal["viennarna", "rnafold_subprocess", "seqfold", "nussinov_approx"]
 
 # ── Détection du backend disponible ──────────────────────────────────────────
 
@@ -51,9 +52,16 @@ def _detect_backend() -> Backend:
     except (FileNotFoundError, subprocess.TimeoutExpired):
         pass
 
+    try:
+        import seqfold  # noqa: F401
+        logger.debug("Backend : seqfold (Zuker pur Python)")
+        return "seqfold"
+    except ImportError:
+        pass
+
     logger.warning(
-        "ViennaRNA non disponible — utilisation de l'approximation Nussinov (moins précise). "
-        "Pour installer ViennaRNA : conda install -c bioconda viennarna"
+        "Aucun moteur de repliement ARN trouvé — utilisation de l'approximation Nussinov "
+        "(moins précise). Pour de meilleurs résultats : pip install ViennaRNA  ou  pip install seqfold"
     )
     return "nussinov_approx"
 
@@ -131,6 +139,18 @@ def _predict_rnafold_subprocess(seq_rna: str, temperature: float) -> tuple[str, 
         Path(tmp_path).unlink(missing_ok=True)
 
 
+def _predict_seqfold(seq_rna: str, temperature: float) -> tuple[str, float]:
+    """
+    seqfold — algorithme de Zuker en Python pur (pip install seqfold).
+    Donne des MFE physiquement réalistes, bien meilleurs que l'approximation Nussinov.
+    """
+    import seqfold
+    structs = seqfold.fold(seq_rna, temp=temperature)
+    dot_bracket = seqfold.dot_bracket(seq_rna, structs)
+    mfe = sum(s.e for s in structs)
+    return dot_bracket, round(mfe, 2)
+
+
 def _predict_nussinov(seq_rna: str) -> tuple[str, float]:
     """
     Algorithme de Nussinov simplifié — Python pur, sans dépendance.
@@ -188,6 +208,8 @@ def _predict(seq_rna: str, backend: Backend, temperature: float) -> tuple[str, f
         return _predict_viennarna(seq_rna, temperature)
     if backend == "rnafold_subprocess":
         return _predict_rnafold_subprocess(seq_rna, temperature)
+    if backend == "seqfold":
+        return _predict_seqfold(seq_rna, temperature)
     return _predict_nussinov(seq_rna)
 
 

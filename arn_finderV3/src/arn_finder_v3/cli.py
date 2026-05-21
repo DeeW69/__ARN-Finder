@@ -287,7 +287,7 @@ def cmd_structure(
     out: Annotated[Path, typer.Option("-o")] = Path("data/structure"),
     max_len: Annotated[int, typer.Option(help="Longueur max (séquences plus longues ignorées)")] = 2000,
     temperature: Annotated[float, typer.Option(help="Température de repliement (°C)")] = 37.0,
-    backend: Annotated[Optional[str], typer.Option(help="viennarna | rnafold_subprocess | nussinov_approx")] = None,
+    backend: Annotated[Optional[str], typer.Option(help="viennarna | rnafold_subprocess | seqfold | nussinov_approx")] = None,
 ) -> None:
     """Prédit la structure secondaire ARN (ViennaRNA > RNAfold > Nussinov approximatif)."""
     from .secondary_structure import StructureRequest, compute_secondary_structure
