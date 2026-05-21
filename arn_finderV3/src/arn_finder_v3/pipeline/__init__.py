@@ -85,6 +85,13 @@ class PipelineConfig:
     codon_reading_frame: int = 0
     codon_min_codons: int = 10
 
+    # Embeddings (V3.4)
+    run_embeddings: bool = True
+    embedding_backend: str = "auto"   # "auto" | "kmer_tfidf" | "nucleotide_transformer" | "esm2"
+    embedding_k: int = 6
+    embedding_vocab_size: int = 4096
+    embedding_batch_size: int = 8
+
     # Comportement
     stop_on_error: bool = True
 
@@ -104,6 +111,7 @@ def run_pipeline(cfg: PipelineConfig) -> PipelineResult:
     from ..blast import BlastRequest, run_blast
     from ..secondary_structure import StructureRequest, compute_secondary_structure
     from ..codon_usage import CodonUsageRequest, compute_codon_usage
+    from ..embeddings import EmbeddingRequest, compute_embeddings
     from ..report import generate_report
     from ..export import export_ml_ready
 
@@ -140,6 +148,7 @@ def run_pipeline(cfg: PipelineConfig) -> PipelineResult:
         ("structure",    cfg.run_structure),
         ("codon_usage",  cfg.run_codon_usage),
         ("blast",        cfg.run_blast),
+        ("embeddings",   cfg.run_embeddings),
         ("export",       cfg.run_export),
         ("report",       cfg.run_report),
     ]
@@ -255,6 +264,21 @@ def run_pipeline(cfg: PipelineConfig) -> PipelineResult:
                 )
                 res = compute_codon_usage(req)
                 result.stage_results["codon_usage"] = res
+
+            elif stage_name == "embeddings":
+                target = filtered_fasta
+                if not target or not target.exists():
+                    raise FileNotFoundError(f"Pas de FASTA filtré pour embeddings : {target}")
+                req = EmbeddingRequest(
+                    input_fasta=target,
+                    out_dir=base / "embeddings",
+                    backend=cfg.embedding_backend,
+                    k=cfg.embedding_k,
+                    tfidf_vocab_size=cfg.embedding_vocab_size,
+                    batch_size=cfg.embedding_batch_size,
+                )
+                res = compute_embeddings(req)
+                result.stage_results["embeddings"] = res
 
             elif stage_name == "blast":
                 target = consensus_fasta or filtered_fasta

@@ -33,6 +33,7 @@ def generate_report(
     top_clusters: int = 15,
     top_structures: int = 20,
     top_codon_seqs: int = 15,
+    top_embed_seqs: int = 10,
 ) -> Path:
     """
     Lit les sorties du pipeline dans `data_dir` et génère un rapport HTML complet.
@@ -63,7 +64,7 @@ def generate_report(
     # ── Collecte des données ──────────────────────────────────────────────────
     ctx = _build_context(
         data_dir, query, run_id, generated_at,
-        top_kmers, top_clusters, top_structures, top_codon_seqs,
+        top_kmers, top_clusters, top_structures, top_codon_seqs, top_embed_seqs,
     )
 
     # ── Rendu Jinja2 ─────────────────────────────────────────────────────────
@@ -85,6 +86,7 @@ def generate_report(
 def _build_context(
     data_dir: Path, query: str, run_id: str, generated_at: str,
     n_kmers: int, n_clusters: int, n_structures: int, n_codon_seqs: int,
+    n_embed_seqs: int = 10,
 ) -> dict[str, Any]:
     stats = _collect_stats(data_dir)
     pipeline_stages = _collect_pipeline_stages(data_dir)
@@ -93,6 +95,7 @@ def _build_context(
     cluster_rows = _collect_clusters(data_dir, n_clusters)
     structure_rows = _collect_structures(data_dir, n_structures)
     codon_rows = _collect_codon_stats(data_dir, n_codon_seqs)
+    embedding_meta = _collect_embedding_meta(data_dir)
 
     return {
         "query": query,
@@ -105,7 +108,27 @@ def _build_context(
         "clusters": cluster_rows,
         "structure_records": structure_rows,
         "codon_records": codon_rows,
+        "embedding_meta": embedding_meta,
     }
+
+
+def _collect_embedding_meta(data_dir: Path) -> dict[str, Any]:
+    manifest_path = data_dir / "embeddings" / "embedding_manifest.json"
+    if not manifest_path.exists():
+        return {}
+    try:
+        m = json.loads(manifest_path.read_text())
+        return {
+            "backend": m.get("backend", "—"),
+            "total_records": m.get("total_records", 0),
+            "embedding_dim": m.get("embedding_dim", 0),
+            "k": m.get("k", "—"),
+            "vocab_size": m.get("tfidf_vocab_size", "—"),
+            "elapsed_s": round(m.get("elapsed_s", 0), 1),
+            "generated_at": m.get("generated_at", ""),
+        }
+    except Exception:
+        return {}
 
 
 def _collect_codon_stats(data_dir: Path, n: int) -> list[dict]:
@@ -144,6 +167,7 @@ def _collect_stats(data_dir: Path) -> dict[str, Any]:
         "clusters": 0, "consensus": 0,
         "structures": 0, "structure_backend": "—",
         "codon_seqs": 0, "mean_enc": "—",
+        "embed_records": 0, "embed_dim": 0, "embed_backend": "—",
         "min_sim": "—",
     }
 
@@ -187,6 +211,14 @@ def _collect_stats(data_dir: Path) -> dict[str, Any]:
         m = json.loads(codon_manifest.read_text())
         stats["codon_seqs"] = m.get("computed", 0)
 
+    # Embedding manifest
+    embed_manifest = data_dir / "embeddings" / "embedding_manifest.json"
+    if embed_manifest.exists():
+        m = json.loads(embed_manifest.read_text())
+        stats["embed_records"] = m.get("total_records", 0)
+        stats["embed_dim"] = m.get("embedding_dim", 0)
+        stats["embed_backend"] = m.get("backend", "—")
+
     # ENc moyen depuis codon_stats.csv
     codon_stats_csv = data_dir / "codon_usage" / "codon_stats.csv"
     if codon_stats_csv.exists():
@@ -214,6 +246,7 @@ def _collect_pipeline_stages(data_dir: Path) -> list[dict]:
         ("structure",   data_dir / "structure" / "structure_manifest.json"),
         ("codon_usage", data_dir / "codon_usage" / "codon_manifest.json"),
         ("blast",       data_dir / "blast" / "blast_manifest.json"),
+        ("embeddings",  data_dir / "embeddings" / "embedding_manifest.json"),
         ("export",      data_dir / "export" / "export_manifest.json"),
     ]
     stages = []

@@ -82,6 +82,13 @@
       <div class="value">{{ stats.codon_seqs }}</div>
       <div class="sub">ENc moyen : {{ stats.mean_enc }}</div>
     </div>
+    {% if stats.embed_records %}
+    <div class="card">
+      <div class="label">Embeddings</div>
+      <div class="value">{{ stats.embed_records }}</div>
+      <div class="sub">dim={{ stats.embed_dim }} · {{ stats.embed_backend }}</div>
+    </div>
+    {% endif %}
   </div>
 
   <!-- Étapes du pipeline -->
@@ -219,6 +226,40 @@
     <span class="enc-high">Vert ≥ 50</span> |
     <span class="enc-mid">Jaune 35–50</span> |
     <span class="enc-low">Rouge &lt; 35</span>
+  </p>
+  {% endif %}
+
+  <!-- Embeddings -->
+  {% if embedding_meta %}
+  <h2>Embeddings de séquences</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="label">Backend</div>
+      <div class="value" style="font-size:1.1rem">{{ embedding_meta.backend }}</div>
+    </div>
+    <div class="card">
+      <div class="label">Séquences</div>
+      <div class="value">{{ embedding_meta.total_records }}</div>
+    </div>
+    <div class="card">
+      <div class="label">Dimension</div>
+      <div class="value">{{ embedding_meta.embedding_dim }}</div>
+    </div>
+    {% if embedding_meta.k %}
+    <div class="card">
+      <div class="label">K-mer</div>
+      <div class="value">{{ embedding_meta.k }}</div>
+      <div class="sub">vocab {{ embedding_meta.vocab_size }}</div>
+    </div>
+    {% endif %}
+    <div class="card">
+      <div class="label">Temps</div>
+      <div class="value" style="font-size:1.1rem">{{ embedding_meta.elapsed_s }}s</div>
+    </div>
+  </div>
+  <p style="color:var(--muted);font-size:0.75rem">
+    Les vecteurs d'embedding sont disponibles dans <code>embeddings/embeddings.parquet</code>
+    pour utilisation directe dans des pipelines ML (clustering, classification, réduction de dimension).
   </p>
   {% endif %}
 

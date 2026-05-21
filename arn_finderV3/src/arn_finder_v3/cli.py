@@ -56,6 +56,8 @@ def cmd_run(
     blast: Annotated[bool, typer.Option("--blast/--no-blast", help="Active BLAST")] = False,
     no_structure: Annotated[bool, typer.Option("--no-structure", help="Désactive structure secondaire")] = False,
     no_codon_usage: Annotated[bool, typer.Option("--no-codon-usage", help="Désactive le calcul codon usage")] = False,
+    no_embeddings: Annotated[bool, typer.Option("--no-embeddings", help="Désactive le calcul d'embeddings")] = False,
+    embedding_backend: Annotated[str, typer.Option(help="Backend embeddings : auto | kmer_tfidf | nucleotide_transformer | esm2")] = "auto",
     no_export: Annotated[bool, typer.Option("--no-export", help="Désactive l'export Parquet")] = False,
     no_report: Annotated[bool, typer.Option("--no-report", help="Désactive le rapport HTML")] = False,
     stop_on_error: Annotated[bool, typer.Option("--stop-on-error/--continue-on-error")] = True,
@@ -79,6 +81,8 @@ def cmd_run(
         run_blast=blast,
         run_structure=not no_structure,
         run_codon_usage=not no_codon_usage,
+        run_embeddings=not no_embeddings,
+        embedding_backend=embedding_backend,
         run_export=not no_export,
         run_report=not no_report,
         stop_on_error=stop_on_error,
@@ -385,6 +389,48 @@ def cmd_codons(
     )
     console.print(f"  Stats : {res.stats_csv}")
     console.print(f"  RSCU  : {res.rscu_csv}")
+
+
+# ── embed ─────────────────────────────────────────────────────────────────────
+
+@app.command("embed")
+def cmd_embed(
+    fasta: Annotated[Path, typer.Argument(help="FASTA en entrée")],
+    out: Annotated[Path, typer.Option("-o")] = Path("data/embeddings"),
+    backend: Annotated[str, typer.Option(
+        help="Backend : auto | kmer_tfidf | nucleotide_transformer | esm2"
+    )] = "auto",
+    k: Annotated[int, typer.Option(help="Taille k-mers (TF-IDF uniquement)")] = 6,
+    vocab_size: Annotated[int, typer.Option(help="Taille vocabulaire TF-IDF")] = 4096,
+    batch_size: Annotated[int, typer.Option(help="Batch size (transformers)")] = 8,
+    max_length: Annotated[int, typer.Option(help="Longueur max tokens (transformers)")] = 512,
+    device: Annotated[str, typer.Option(help="Dispositif : cpu | cuda")] = "cpu",
+    tsv: Annotated[bool, typer.Option("--tsv/--no-tsv", help="Export TSV en plus du Parquet")] = False,
+) -> None:
+    """Calcule les embeddings de séquences (k-mer TF-IDF ou transformers biologiques)."""
+    from .embeddings import EmbeddingRequest, compute_embeddings
+
+    req = EmbeddingRequest(
+        input_fasta=fasta,
+        out_dir=out,
+        backend=backend,
+        k=k,
+        tfidf_vocab_size=vocab_size,
+        batch_size=batch_size,
+        max_length=max_length,
+        device=device,
+        save_tsv=tsv,
+    )
+    res = compute_embeddings(req)
+    console.print(
+        f"[green]✓[/green] {res.total_records} séquences, "
+        f"dim={res.embedding_dim}, backend=[bold]{res.backend_used}[/bold] "
+        f"({res.elapsed_s:.1f}s)"
+    )
+    console.print(f"  Parquet : {res.embeddings_path}")
+    console.print(f"  Manifest: {res.manifest_path}")
+    if res.tsv_path:
+        console.print(f"  TSV     : {res.tsv_path}")
 
 
 # ── api serve ─────────────────────────────────────────────────────────────────

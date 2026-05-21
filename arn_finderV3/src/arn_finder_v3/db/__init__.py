@@ -143,10 +143,23 @@ CREATE TABLE IF NOT EXISTS codon_rscu (
 );
 """
 
+DDL_EMBEDDING_META = """
+CREATE TABLE IF NOT EXISTS embedding_meta (
+    backend        VARCHAR,
+    total_records  INTEGER,
+    embedding_dim  INTEGER,
+    k              INTEGER,
+    vocab_size     INTEGER,
+    elapsed_s      DOUBLE,
+    generated_at   VARCHAR,
+    imported_at    VARCHAR
+);
+"""
+
 ALL_DDL = [
     DDL_SEQUENCES, DDL_MOTIFS, DDL_CLUSTERS,
     DDL_CONSENSUS, DDL_STRUCTURE, DDL_BLAST,
-    DDL_CODON_USAGE, DDL_CODON_RSCU,
+    DDL_CODON_USAGE, DDL_CODON_RSCU, DDL_EMBEDDING_META,
 ]
 
 
@@ -186,14 +199,15 @@ class ARNFinderDB:
         counts: dict[str, int] = {}
         ts = now_iso()
 
-        counts["sequences"]   = self._import_sequences(data_dir, ts)
-        counts["motifs"]      = self._import_motifs(data_dir, ts)
-        counts["clusters"]    = self._import_clusters(data_dir, ts)
-        counts["consensus"]   = self._import_consensus(data_dir, ts)
-        counts["structure"]   = self._import_structure(data_dir, ts)
-        counts["blast_hits"]  = self._import_blast(data_dir, ts)
-        counts["codon_usage"] = self._import_codon_usage(data_dir, ts)
-        counts["codon_rscu"]  = self._import_codon_rscu(data_dir, ts)
+        counts["sequences"]      = self._import_sequences(data_dir, ts)
+        counts["motifs"]         = self._import_motifs(data_dir, ts)
+        counts["clusters"]       = self._import_clusters(data_dir, ts)
+        counts["consensus"]      = self._import_consensus(data_dir, ts)
+        counts["structure"]      = self._import_structure(data_dir, ts)
+        counts["blast_hits"]     = self._import_blast(data_dir, ts)
+        counts["codon_usage"]    = self._import_codon_usage(data_dir, ts)
+        counts["codon_rscu"]     = self._import_codon_rscu(data_dir, ts)
+        counts["embedding_meta"] = self._import_embedding_meta(data_dir, ts)
 
         logger.info("Import DuckDB terminé : %s", counts)
         return counts
@@ -381,6 +395,27 @@ class ARNFinderDB:
             FROM read_csv_auto('{csv_path}')
         """)
         return self._con.execute("SELECT COUNT(*) FROM codon_rscu").fetchone()[0]
+
+    def _import_embedding_meta(self, data_dir: Path, ts: str) -> int:
+        manifest_path = data_dir / "embeddings" / "embedding_manifest.json"
+        if not manifest_path.exists():
+            return 0
+        self._con.execute("DELETE FROM embedding_meta")
+        m = json.loads(manifest_path.read_text())
+        self._con.execute(
+            "INSERT INTO embedding_meta VALUES (?,?,?,?,?,?,?,?)",
+            [
+                m.get("backend", ""),
+                m.get("total_records", 0),
+                m.get("embedding_dim", 0),
+                m.get("k"),
+                m.get("tfidf_vocab_size"),
+                m.get("elapsed_s", 0.0),
+                m.get("generated_at", ""),
+                ts,
+            ],
+        )
+        return 1
 
     # ── Requêtes ──────────────────────────────────────────────────────────────
 
